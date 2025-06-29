@@ -152,7 +152,7 @@
                          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label for="consumption-rate" class="block text-sm font-medium text-stone-600">Drinks per Person per Hour</label>
-                                <input type="number" id="consumption-rate" step="0.1" value="1.0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
+                                <input type="number" id="consumption-rate" value="1.0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
                             </div>
                             <div>
                                 <label for="ice-rate" class="block text-sm font-medium text-stone-600">Ice per Guest per 24h (grams)</label>
@@ -335,10 +335,11 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Ingredient</th>
                                         <th class="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">Quantity</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Unit</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">Bottles Needed</th>
                                     </tr>
                                 </thead>
                                 <tbody id="calc-ingredients-body" class="bg-white divide-y divide-gray-200">
-                                    <tr><td colspan="3" class="px-6 py-4 text-sm text-stone-500 text-center">Select a cocktail to see ingredients.</td></tr>
+                                    <tr><td colspan="4" class="px-6 py-4 text-sm text-stone-500 text-center">Select a cocktail to see ingredients.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -412,6 +413,7 @@
                 ]
             },
             preferences: {
+                // Initial preferences are set directly in appData for persistence
                 nonDrinkers: {
                     'Non-alcoholic beer': 50,
                     'Prosecco without alcohol': 50
@@ -533,11 +535,11 @@
                         <button class="remove-segment-btn absolute top-2 right-2 text-red-500 hover:text-red-700">&times;</button>
                         <input type="text" value="${event.name}" class="event-name-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
                         
-                        <div class="time-range-slider-container relative w-full h-8 bg-gray-200 rounded-lg cursor-pointer my-2" data-event-id="${event.id}">
+                        <div class="time-range-slider-container relative w-full h-8 bg-gray-200 rounded-lg opacity: 0.8; cursor-pointer my-2" data-event-id="${event.id}">
                             <div class="time-range-track-markers">
                                 ${markerSpans}
                             </div>
-                            <div class="time-range-bar absolute h-full bg-blue-500 rounded-lg opacity-80" style="left: ${startPercentage}%; width: ${widthPercentage}%;">
+                            <div class="time-range-bar absolute h-full bg-blue-500 rounded-lg opacity: 0.8;" style="left: ${startPercentage}%; width: ${widthPercentage}%;">
                                 <div class="handle left-handle absolute w-4 h-full bg-blue-700 rounded-l-lg -ml-2 cursor-ew-resize"></div>
                                 <div class="handle right-handle absolute w-4 h-full bg-blue-700 rounded-r-lg -mr-2 cursor-ew-resize"></div>
                                 <div class="handle center-handle absolute" style="left: 16px; right: 16px; cursor: grab;"></div>
@@ -696,7 +698,7 @@
             Object.entries(fixedCocktailForecast).forEach(([cocktailName, numServings]) => {
                 if (numServings > 0) {
                     totalCocktailsServed += numServings;
-                    cocktailServingsChartData[cocktailName] = (cocktailServingsChartData[cocktailName] || 0) + numServings;
+                    cocktailServingsChartData[cocktailName] = (cocktailServingsChartData[cocktailName] || 0) + numServings; 
 
                     if (recipes[cocktailName]) {
                         recipes[cocktailName].forEach(ingredient => {
@@ -780,21 +782,6 @@
                 }
             });
 
-            // --- New Hydration Calculation ---
-            const totalGuests = guests.womenDrinkers + guests.womenNondrinkers + guests.menDrinkers + guests.menNondrinkers;
-            const currentTotalEventHours = events.reduce((sum, e) => sum + e.duration, 0); 
-            const mlHydrationPerGuestPer8Hours = assumptions.hydrationMlPer8Hours;
-            const totalHydrationMlNeeded = totalGuests * (currentTotalEventHours / 8) * mlHydrationPerGuestPer8Hours;
-
-
-            Object.entries(preferences.hydration).forEach(([bev, perc]) => {
-                if (servings[bev]) {
-                    const qtyInMl = (perc / 100) * totalHydrationMlNeeded;
-                    addRawItem(bev, qtyInMl, 'ml', servings[bev]?.category || 'Unknown',
-                               { type: 'hydration', guests: totalGuests, event_hours: currentTotalEventHours, ml_per_8_hours_per_guest: mlHydrationPerGuestPer8Hours, percentage: perc, total_qty_from_source: qtyInMl });
-                }
-            });
-            // --- End New Hydration Calculation ---
 
             const alcoholicToastGuests = assumptions.alcoholicToastGuests || 0;
             const proseccoServingMl = appData.servings['Prosecco'].vol / appData.servings['Prosecco'].serv; 
@@ -816,19 +803,19 @@
                 let purchaseUnit;
                 let conversionFactor = 1; 
                 
-                if (servings[item]) { 
+                if (servings[item] && servings[item].vol !== 'N/A') { // For liquid items with defined bottle volumes
                     const mlPerBottle = servings[item].vol;
                     purchaseQty = Math.ceil(data.totalQty / mlPerBottle);
-                    purchaseUnit = `${mlPerBottle}ml bottle`;
+                    purchaseUnit = `bottles`; 
                     conversionFactor = mlPerBottle; 
                 } else if (item === 'Limes' || item === 'Oranges') {
                     purchaseQty = Math.ceil(data.totalQty);
-                    purchaseUnit = 'units';
+                    purchaseUnit = 'units'; 
                     conversionFactor = 1; 
                 } else if (item === 'Mint') {
-                    purchaseQty = Math.ceil(data.totalQty / 80); 
-                    purchaseUnit = 'bunches';
-                    conversionFactor = 80; 
+                    purchaseQty = Math.ceil(data.totalQty); // totalQty is already in leaves
+                    purchaseUnit = 'leaves'; 
+                    conversionFactor = 1; 
                 } else if (item === 'Sugar') {
                      purchaseQty = Math.ceil(data.totalQty / 1000); 
                      purchaseUnit = 'kg bags';
@@ -851,7 +838,8 @@
                 };
             });
 
-            // Update total event hours display as well
+            const currentTotalEventHours = events.reduce((sum, e) => sum + e.duration, 0); 
+
             document.getElementById('total-event-hours-display').textContent = currentTotalEventHours.toFixed(1);
 
             const totalGuestCount = guests.womenDrinkers + guests.womenNondrinkers + guests.menDrinkers + guests.menNondrinkers;
@@ -1040,7 +1028,7 @@
             ingredientsBody.innerHTML = '';
 
             if (numPeople === 0 || drinksPerPerson === 0 || !selectedCocktail) {
-                ingredientsBody.innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-sm text-stone-500 text-center">Enter people, drinks, and select a cocktail to calculate.</td></tr>';
+                ingredientsBody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-sm text-stone-500 text-center">Enter people, drinks, and select a cocktail to calculate.</td></tr>';
                 return;
             }
 
@@ -1048,7 +1036,7 @@
             const recipe = appData.recipes[selectedCocktail];
 
             if (!recipe) {
-                ingredientsBody.innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-sm text-red-500 text-center">Recipe not found for selected cocktail.</td></tr>';
+                ingredientsBody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-sm text-red-500 text-center">Recipe not found for selected cocktail.</td></tr>';
                 return;
             }
 
@@ -1063,11 +1051,17 @@
             });
 
             Object.entries(calculatedIngredients).sort(([aKey], [bKey]) => aKey.localeCompare(bKey)).forEach(([item, data]) => {
+                let bottlesNeeded = 'N/A';
+                if (data.unit === 'ml' && appData.servings[item] && appData.servings[item].vol !== 'N/A') {
+                    bottlesNeeded = Math.ceil(data.totalQty / appData.servings[item].vol);
+                }
+
                 const row = `
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-stone-900">${item}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-500 text-right">${data.totalQty.toFixed(1)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-500">${data.unit}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-stone-500 text-right">${bottlesNeeded}</td>
                     </tr>
                 `;
                 ingredientsBody.insertAdjacentHTML('beforeend', row);
@@ -1084,6 +1078,264 @@
                 option.textContent = cocktailName;
                 select.appendChild(option);
             });
+        }
+
+        // Function to generate and download the report
+        function generateAndDownloadReport() {
+            let reportContent = `# Wedding Beverage Planning Report\n\n`;
+            reportContent += `Generated: ${new Date().toLocaleString()}\n\n`;
+
+            // 1. Event & Guest Details
+            reportContent += `## Event & Guest Details\n\n`;
+            reportContent += `### Guest Demographics\n`;
+            reportContent += `| Category             | Count |\n`;
+            reportContent += `| :------------------- | :---- |\n`;
+            reportContent += `| Women (Alcohol Drinkers) | ${document.getElementById('women-drinkers').value} |\n`;
+            reportContent += `| Women (Non-Drinkers)   | ${document.getElementById('women-nondrinkers').value} |\n`;
+            reportContent += `| Men (Alcohol Drinkers)   | ${document.getElementById('men-drinkers').value} |\n`;
+            reportContent += `| Men (Non-Drinkers)     | ${document.getElementById('men-nondrinkers').value} |\n`;
+            reportContent += `| **Total Guests** | ${document.getElementById('total-guests-result').textContent} |\n\n`;
+
+            reportContent += `### Event Timeline\n`;
+            reportContent += `| Event Name        | Start Time      | End Time        | Duration (Hours) |\n`;
+            reportContent += `| :---------------- | :-------------- | :-------------- | :--------------- |\n`;
+            appData.events.forEach(event => {
+                reportContent += `| ${event.name} | ${formatTime(event.start)} | ${formatTime(event.end)} | ${event.duration.toFixed(1)} |\n`;
+            });
+            reportContent += `| **Total Event Hours** | | | **${document.getElementById('total-event-hours-display').textContent}** |\n\n`;
+
+            reportContent += `### Core Assumptions\n`;
+            reportContent += `| Assumption                 | Value            |\n`;
+            reportContent += `| :------------------------- | :--------------- |\n`;
+            reportContent += `| Drinks per Person per Hour | ${document.getElementById('consumption-rate').value} |\n`;
+            reportContent += `| Ice per Guest per 24h (grams)| ${document.getElementById('ice-rate').value} |\n`;
+            reportContent += `| Additional Ice for Buckets (kg)| ${document.getElementById('additional-bucket-ice').value} |\n`;
+            reportContent += `| Alcoholic Toast Guests     | ${document.getElementById('alcoholic-toast-guests').value} |\n`;
+            reportContent += `| Non-Alcoholic Toast Guests | ${document.getElementById('non-alcoholic-toast-guests').value} |\n`;
+            reportContent += `| Hydration (ml/8 hours/guest)| ${appData.assumptions.hydrationMlPer8Hours} |\n\n`;
+
+            // 2. Preferences
+            reportContent += `## Preferences\n\n`;
+            reportContent += `### Hydration Preferences\n`;
+            reportContent += `| Beverage    | Preference (%) |\n`;
+            reportContent += `| :---------- | :------------- |\n`;
+            Object.entries(appData.preferences.hydration).forEach(([bev, perc]) => {
+                reportContent += `| ${bev} | ${Math.round(perc)} |\n`;
+            });
+            reportContent += `\n`;
+
+            appData.events.forEach(event => {
+                const prefKey = event.id;
+                reportContent += `### ${event.name} Preferences\n`;
+                
+                reportContent += `**Women's Preferences**\n`;
+                reportContent += `| Beverage    | Preference (%) |\n`;
+                reportContent += `| :---------- | :------------- |\n`;
+                Object.entries(appData.preferences[prefKey].women).forEach(([bev, perc]) => {
+                    reportContent += `| ${bev} | ${Math.round(perc)} |\n`;
+                });
+                reportContent += `\n`;
+
+                reportContent += `**Men's Preferences**\n`;
+                reportContent += `| Beverage    | Preference (%) |\n`;
+                reportContent += `| :---------- | :------------- |\n`;
+                Object.entries(appData.preferences[prefKey].men).forEach(([bev, perc]) => {
+                    reportContent += `| ${bev} | ${Math.round(perc)} |\n`;
+                });
+                reportContent += `\n`;
+            });
+
+            reportContent += `### Non-Drinker Preferences (All Events)\n`;
+            reportContent += `| Beverage    | Preference (%) |\n`;
+            reportContent += `| :---------- | :------------- |\n`;
+            Object.entries(appData.preferences.nonDrinkers).forEach(([bev, perc]) => {
+                reportContent += `| ${bev} | ${Math.round(perc)} |\n`;
+            });
+            reportContent += `\n`;
+
+
+            // 3. Results Dashboard
+            reportContent += `## Results Dashboard\n\n`;
+            reportContent += `| Metric            | Value       |\n`;
+            reportContent += `| :---------------- | :---------- |\n`;
+            reportContent += `| Total Guests      | ${document.getElementById('total-guests-result').textContent} |\n`;
+            reportContent += `| Total Drinks (Est.) | ${document.getElementById('total-drinks-result').textContent} |\n`;
+            reportContent += `| Total Cocktails   | ${document.getElementById('total-cocktails-result').textContent} |\n`;
+            reportContent += `| Ice Needed        | ${document.getElementById('total-ice-result').textContent} |\n\n`;
+
+            // 4. Complete Shopping List
+            reportContent += `## Complete Shopping List\n\n`;
+            reportContent += `| Item | Category | Quantity | Unit |\n`;
+            reportContent += `| :--- | :------- | :------- | :--- |\n`;
+            
+            // Get the data directly from the last calculation
+            const calculatedShoppingList = window.finalCalculatedShoppingList; 
+
+            calculatedShoppingList.sort((a,b) => a.category.localeCompare(b.category) || a.item.localeCompare(b.item)).forEach(item => {
+                reportContent += `| ${item.item} | ${item.category} | ${item.qty} | ${item.unit} |\n`;
+                reportContent += `|    | **Breakdown:** |\n`;
+                item.details.forEach(detail => {
+                    let detailText = '';
+                    const drinkerHourNote = "Note: A 'drinker hour' represents one guest consuming drinks for one hour, based on the 'Drinks per Person per Hour' assumption. For example, 10 drinkers for a 9-hour event = 90 drinker hours.";
+                    if (detail.type === 'cocktail_ingredient' || detail.type === 'cocktail_ingredient_from_pref') {
+                        detailText = `From ${detail.cocktail}: ${detail.servings.toFixed(1)} servings * ${detail.qty_per_serving.toFixed(1)}${detail.unit_per_serving} = ${detail.total_qty_from_source.toFixed(1)}${detail.unit_per_serving}`;
+                        if (detail.type === 'cocktail_ingredient_from_pref') {
+                            detailText += ` (from ${detail.gender} preferences for ${detail.event}, based on ${detail.drinker_hours_involved.toFixed(1)} drinker hours)`;
+                        }
+                    } else if (detail.type === 'direct_consumption') {
+                        const totalRawQty = detail.drinker_hours * detail.percentage / 100 * detail.qty_per_drink;
+                        detailText = `From direct consumption (${detail.gender} for ${detail.event}): ${(detail.percentage).toFixed(1)}% of ${detail.drinker_hours.toFixed(1)} drinker hours (${detail.qty_per_drink.toFixed(1)}ml/drink) = ${totalRawQty.toFixed(1)}ml`;
+                    } else if (detail.type === 'toast') {
+                        detailText = `From Toast (${detail.guests} guests): ${detail.guests} guests * ${detail.ml_per_person.toFixed(1)}ml/serving = ${detail.total_qty_from_source.toFixed(1)}ml`;
+                    } else if (detail.type === 'hydration') { 
+                        detailText = `From Overall Hydration: ${detail.percentage.toFixed(1)}% of total ${detail.event_hours.toFixed(1)} event hours for ${detail.guests} guests (${detail.ml_per_8_hours_per_guest.toFixed(1)}ml/8h/guest) = ${detail.total_qty_from_source.toFixed(1)}ml`;
+                    }
+                    if (detail.note) { 
+                        detailText += `<br>    * ${drinkerHourNote}`; 
+                    }
+                    reportContent += `|    | - ${detailText} |\n`;
+                });
+                reportContent += `|    | **Total Raw Quantity:** ${item.totalRawVolume.toFixed(1)} ${item.rawUnit} |\n`;
+                reportContent += `|    | **Final Calculation:** CEILING(${item.totalRawVolume.toFixed(1)} ${item.rawUnit} / ${item.conversionFactor.toFixed(1)} ${item.rawUnit}/${item.unit}) = ${item.qty} ${item.unit} |\n`;
+            });
+            reportContent += `\n`;
+
+
+            // 5. Beverage Assumptions (Table)
+            reportContent += `## Beverage Assumptions\n\n`;
+            reportContent += `| Beverage     | Volume per Unit (ml) | Servings per Unit | Category |\n`;
+            reportContent += `| :----------- | :------------------- | :---------------- | :------- |\n`;
+            Object.entries(appData.servings).sort(([aKey], [bKey]) => aKey.localeCompare(bKey)).forEach(([bevName, data]) => {
+                reportContent += `| ${bevName} | ${data.vol !== 'N/A' ? `${data.vol} ml` : 'N/A'} | ${data.serv !== 'N/A' ? data.serv : 'N/A'} | ${data.category} |\n`;
+            });
+            reportContent += `\n`;
+
+            // 6. Cocktail Recipes (Table)
+            reportContent += `## Cocktail Recipes\n\n`;
+            reportContent += `| Cocktail     | Ingredient | Quantity per Serving | Unit |\n`;
+            reportContent += `| :----------- | :--------- | :------------------- | :--- |\n`;
+            Object.keys(appData.recipes).sort().forEach(cocktailName => {
+                appData.recipes[cocktailName].forEach((ingredient, index) => {
+                    reportContent += `| ${index === 0 ? cocktailName : ''} | ${ingredient.item} | ${ingredient.qty.toFixed(1)} | ${ingredient.unit} |\n`;
+                });
+            });
+            reportContent += `\n`;
+
+
+            const blob = new Blob([reportContent], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'wedding_beverage_report.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Make finalShoppingList globally accessible for the report generation
+        // This variable will be updated each time calculateAndRenderResults is called.
+        window.finalCalculatedShoppingList = [];
+
+        // Function to save current state as new default values in the code
+        function saveCurrentAsDefault() {
+            // Capture current guest data
+            const currentGuests = {
+                womenDrinkers: parseInt(document.getElementById('women-drinkers').value) || 0,
+                womenNondrinkers: parseInt(document.getElementById('women-nondrinkers').value) || 0,
+                menDrinkers: parseInt(document.getElementById('men-drinkers').value) || 0,
+                menNondrinkers: parseInt(document.getElementById('men-nondrinkers').value) || 0,
+            };
+
+            // Capture current event data
+            const currentEvents = appData.events.map(event => {
+                const element = document.querySelector(`.event-segment-item[data-id="${event.id}"]`);
+                return {
+                    id: event.id,
+                    name: element.querySelector('.event-name-input').value,
+                    start: event.start, // These are updated directly in appData.events by slider logic
+                    end: event.end,     // so no need to read from input fields here.
+                    duration: event.duration
+                };
+            });
+
+            // Capture current assumptions
+            const currentAssumptions = {
+                consumptionRate: parseFloat(document.getElementById('consumption-rate').value) || 0,
+                iceRate: parseInt(document.getElementById('ice-rate').value) || 0,
+                additionalBucketIceKg: parseFloat(document.getElementById('additional-bucket-ice').value) || 0,
+                alcoholicToastGuests: parseInt(document.getElementById('alcoholic-toast-guests').value) || 0,
+                nonAlcoholicToastGuests: parseInt(document.getElementById('non-alcoholic-toast-guests').value) || 0,
+                hydrationMlPer8Hours: appData.assumptions.hydrationMlPer8Hours // This is static, not from input
+            };
+
+            // Capture current preferences (hydration, nonDrinkers, and event-specific)
+            const currentPreferences = {};
+            
+            // Hydration preferences
+            currentPreferences.hydration = {};
+            Array.from(document.querySelectorAll('#hydration-preferences-container [data-event-key="hydration"] .preference-slider')).forEach(slider => {
+                currentPreferences.hydration[slider.dataset.bev] = parseFloat(slider.value);
+            });
+
+            // Non-drinker preferences
+            currentPreferences.nonDrinkers = {};
+            Array.from(document.querySelectorAll('#preferences-container [data-event-key="nonDrinkers"] .preference-slider')).forEach(slider => {
+                 currentPreferences.nonDrinkers[slider.dataset.bev] = parseFloat(slider.value);
+            });
+
+            // Event-specific preferences
+            appData.events.forEach(event => {
+                currentPreferences[event.id] = {};
+                const eventContainer = document.querySelector(`#preferences-container [data-event-key="${event.id}"]`);
+                if (eventContainer) {
+                    const womenSliders = Array.from(eventContainer.querySelectorAll('[data-group-key="women"] .preference-slider'));
+                    if (womenSliders.length > 0) {
+                        currentPreferences[event.id].women = {};
+                        womenSliders.forEach(slider => {
+                            currentPreferences[event.id].women[slider.dataset.bev] = parseFloat(slider.value);
+                        });
+                    }
+
+                    const menSliders = Array.from(eventContainer.querySelectorAll('[data-group-key="men"] .preference-slider'));
+                    if (menSliders.length > 0) {
+                        currentPreferences[event.id].men = {};
+                        menSliders.forEach(slider => {
+                            currentPreferences[event.id].men[slider.dataset.bev] = parseFloat(slider.value);
+                        });
+                    }
+                }
+            });
+
+            let newAppDataString = JSON.stringify({
+                guests: currentGuests,
+                events: currentEvents,
+                assumptions: currentAssumptions,
+                servings: appData.servings, // Keep servings static
+                recipes: appData.recipes,   // Keep recipes static
+                preferences: currentPreferences
+            }, null, 4); // Pretty print JSON
+
+            // Construct the updated HTML string for download
+            const originalHtml = document.documentElement.outerHTML;
+            const scriptTagStart = originalHtml.indexOf('const appData = {');
+            const scriptTagEnd = originalHtml.indexOf('};', scriptTagStart) + 1; // find the end of appData object
+
+            // Create a new HTML content with updated appData
+            const startHtml = originalHtml.substring(0, scriptTagStart);
+            const endHtml = originalHtml.substring(scriptTagEnd);
+
+            const finalHtmlContent = `${startHtml}const appData = ${newAppDataString};\n${endHtml}`;
+
+            const blob = new Blob([finalHtmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'wedding_calculator_default.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
 
@@ -1126,7 +1378,6 @@
                  if(e.target.classList.contains('remove-segment-btn')) {
                     const id = parseInt(e.target.closest('[data-id]').dataset.id);
                     appData.events = appData.events.filter(event => event.id !== id);
-                    // preferences for deleted events are automatically ignored as they won't be rendered
                     renderEventSegments();
                     renderPreferences(); 
                     calculateAndRenderResults();
@@ -1196,6 +1447,9 @@
             document.getElementById('calc-people').addEventListener('input', calculateCustomCocktailIngredients);
             document.getElementById('calc-drinks-per-person').addEventListener('input', calculateCustomCocktailIngredients);
             document.getElementById('calc-cocktail-select').addEventListener('change', calculateCustomCocktailIngredients);
+
+            // Download Report Button Listener - REMOVED
+            // Save Defaults Button Listener - REMOVED
 
 
             let isDragging = false;
