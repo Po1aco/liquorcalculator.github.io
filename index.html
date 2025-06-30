@@ -183,20 +183,16 @@
                         <p class="text-slate-600">This section dynamically reflects your choices. Here you'll find event timeline visualizations, a summary of beverage needs, estimated cocktail servings, ice requirements, and a detailed shopping list with costs. Each element is interactive to help you understand and optimize your planning.</p>
                     </div>
                     
-                    <!-- Event Timeline Visualization Card -->
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <h3 class="text-xl font-semibold mb-4">Event Timeline</h3>
-                         <p class="text-sm text-slate-500 mb-4">This visualization shows the individual phases of your wedding and their duration. Use this timeline to ensure your schedule is balanced and that you have planned beverages appropriately for each stage of the celebration.</p>
-                        <div id="timeline-visualization" class="space-y-3"></div>
-                    </div>
-
-                    <!-- Charts Section (Grid for two charts side-by-side on medium screens) -->
+                    <!-- Event Timeline and Estimated Cocktail Servings side-by-side -->
                     <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Event Timeline Visualization Card -->
                         <div class="bg-white p-6 rounded-2xl shadow-lg">
-                            <h3 class="text-xl font-semibold mb-4">Total Beverage Consumption</h3>
-                             <p class="text-sm text-slate-500 mb-4">This chart shows the overall breakdown of beverage needs by category. By analyzing these proportions, you can quickly assess whether your plan aligns with the wedding's character, e.g., whether cocktails or non-alcoholic drinks dominate.</p>
-                            <div class="chart-container h-[300px] md:h-auto"><canvas id="totalConsumptionChart"></canvas></div>
+                            <h3 class="text-xl font-semibold mb-4">Event Timeline</h3>
+                            <p class="text-sm text-slate-500 mb-4">This visualization shows the individual phases of your wedding and their duration. Use this timeline to ensure your schedule is balanced and that you have planned beverages appropriately for each stage of the celebration.</p>
+                            <div id="timeline-visualization" class="space-y-3"></div>
                         </div>
+
+                        <!-- Estimated Cocktail Servings Chart -->
                         <div class="bg-white p-6 rounded-2xl shadow-lg">
                             <h3 class="text-xl font-semibold mb-4">Estimated Cocktail Servings</h3>
                             <p class="text-sm text-slate-500 mb-4">This chart displays the predicted number of servings for each cocktail type that will be served throughout the entire event. Use it to adjust your cocktail menu to guest preferences and ensure the popularity of selected drinks.</p>
@@ -205,20 +201,6 @@
                             <div id="cocktail-ideas-output" class="mt-4 p-3 bg-slate-100 rounded-md text-sm hidden"></div>
                         </div>
                     </div>
-
-                    <!-- Ice Calculation Card -->
-                     <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <h3 class="text-xl font-semibold mb-4">Ice Requirements</h3>
-                        <p class="text-sm text-slate-500 mb-4">Below is the total estimated amount of ice needed for your event, including ice for drinks, cocktails, and an additional reserve for chilling bottles. Ensure you have enough to keep beverages at the perfect temperature throughout the night.</p>
-                        <div class="flex items-center justify-center text-center mt-4">
-                            <div>
-                                <div id="totalIce" class="text-6xl font-bold text-blue-600">0 kg</div>
-                                <div class="text-slate-500 mt-2">Total Estimated Ice</div>
-                                <div id="iceBreakdown" class="text-xs text-slate-400 mt-1"></div>
-                            </div>
-                        </div>
-                    </div>
-
 
                     <!-- Shopping List & Cost Estimate Card -->
                     <div class="bg-white p-6 rounded-2xl shadow-lg">
@@ -234,6 +216,7 @@
                                     <tr>
                                         <th scope="col" class="px-6 py-3">Product</th>
                                         <th scope="col" class="px-6 py-3 text-right">Quantity</th>
+                                        <th scope="col" class="px-6 py-3 text-right">Volume</th>
                                         <th scope="col" class="px-6 py-3 text-right">Cost (PLN)</th>
                                     </tr>
                                 </thead>
@@ -244,6 +227,19 @@
                         </div>
                         <button id="get-shopping-tips-btn" class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">✨ Get Shopping Tips</button>
                         <div id="shopping-tips-output" class="mt-4 p-3 bg-slate-100 rounded-md text-sm hidden"></div>
+                    </div>
+
+                    <!-- Ice Calculation Card -->
+                     <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4">Ice Requirements</h3>
+                        <p class="text-sm text-slate-500 mb-4">Below is the total estimated amount of ice needed for your event, including ice for drinks, cocktails, and an additional reserve for chilling bottles. Ensure you have enough to keep beverages at the perfect temperature throughout the night.</p>
+                        <div class="flex items-center justify-center text-center mt-4">
+                            <div>
+                                <div id="totalIce" class="text-6xl font-bold text-blue-600">0 kg</div>
+                                <div class="text-slate-500 mt-2">Total Estimated Ice</div>
+                                <div id="iceBreakdown" class="text-xs text-slate-400 mt-1"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -676,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     prefs[slider.dataset.beverage] = Math.floor(newTotalForOthers / otherSliders.length);
                 });
             } else { // Distribute proportionally
-                otherSliders.forEach(slider => {
+                others.forEach(slider => {
                     prefs[slider.dataset.beverage] = Math.round((prefs[slider.dataset.beverage] / totalOfOthers) * newTotalForOthers);
                 });
             }
@@ -955,76 +951,67 @@ document.addEventListener('DOMContentLoaded', () => {
             timelineContainer.appendChild(div);
         });
 
-        // Prepare data for Total Beverage Consumption Chart (Doughnut)
-        const totalConsumptionData = {
-            labels: ['Alcoholic', 'Non-Alcoholic', 'Cocktail Ingredients'],
-            datasets: [{
-                data: [0, 0, 0],
-                backgroundColor: ['#ef4444', '#3b82f6', '#eab308'], // Red, Blue, Yellow
-            }]
-        };
         let totalCost = 0;
         const shoppingListContainer = document.getElementById('shopping-list');
         shoppingListContainer.innerHTML = '';
 
-        // Define categories for chart aggregation
+        // Define categories for chart aggregation (still needed for shopping list calculations)
         const alcoholTypes = ["Prosecco", "White Wine", "Whiskey", "Beer", "Aperol", "White Rum", "Elderflower Liqueur"];
         const hydrationTypes = ["Water", "Coca Cola", "Ginger Ale", "Soda", "Tonic Water", "Non-alcoholic beer", "Non-alcoholic Prosecco"];
         const cocktailIngredients = ["Limes", "Oranges", "Mint", "Sugar"];
 
         // Populate shopping list table and aggregate data for charts
         Object.entries(finalList).forEach(([item, data]) => {
-            // Aggregate amounts for the Total Beverage Consumption Chart
-            if(alcoholTypes.includes(item)) {
-                totalConsumptionData.datasets[0].data[0] += data.amount; // Alcoholic
-            } else if(hydrationTypes.includes(item)) {
-                totalConsumptionData.datasets[0].data[1] += data.amount; // Non-Alcoholic
-            } else if(cocktailIngredients.includes(item)) { // Specific cocktail ingredients
-                totalConsumptionData.datasets[0].data[2] += data.amount; // Cocktail Ingredients
-            }
-
             let purchaseUnits = 0;
-            let purchaseUnitName = '';
+            let volumeDisplay = ''; // New variable for volume display
             let itemCost = 0;
             let price = state.prices[item] || 0; // Get price from state, default to 0 if not found
             
-            // Determine purchase units and cost based on item type and unit
+            // Determine purchase units, volume display, and cost based on item type and unit
             if (data.unit === 'L') {
-                const bottleSize = (state.servingsPerBottle[item]?.size || 1000) / 1000; // Convert ml to L
-                purchaseUnits = Math.ceil(data.amount / bottleSize);
-                purchaseUnitName = `${purchaseUnits} x ${bottleSize * 1000}ml`;
+                const bottleSize = (state.servingsPerBottle[item]?.size || 1000); // Size in ml
+                purchaseUnits = Math.ceil(data.amount / (bottleSize / 1000)); // Convert L to ml, then divide by bottle size in ml
+                volumeDisplay = `${bottleSize}ml`;
                 itemCost = purchaseUnits * price;
             } else if(data.unit === 'unit(s)') {
                 purchaseUnits = Math.ceil(data.amount);
-                purchaseUnitName = `${purchaseUnits} unit(s)`;
+                volumeDisplay = `unit`;
                 itemCost = purchaseUnits * price;
             } else if (data.unit === 'bunches') {
                 purchaseUnits = Math.ceil(data.amount);
-                purchaseUnitName = `${purchaseUnits} bunch(es)`;
+                volumeDisplay = `bunch`;
                 itemCost = purchaseUnits * price;
             } else if (data.unit === 'kg') {
                 purchaseUnits = Math.ceil(data.amount);
                 if (item === "Ice") {
                     purchaseUnits = Math.ceil(data.amount / 5); // Assume 5kg bags for ice
-                    purchaseUnitName = `${purchaseUnits} x 5kg`;
+                    volumeDisplay = `5kg`;
                     itemCost = purchaseUnits * 10; // Assume 10 PLN per 5kg bag of ice
                 } else {
-                    purchaseUnitName = `${purchaseUnits} kg`;
+                    volumeDisplay = `1kg`; // Assuming 1kg bags for sugar, etc.
                     itemCost = purchaseUnits * price;
                 }
             }
             totalCost += itemCost;
             
-            // Create table row with expandable details for explanation
-            const tr = document.createElement('tr');
-            tr.className = "bg-white border-b hover:bg-slate-50";
-            tr.innerHTML = `
-                <td colspan="3" class="px-0 py-0">
+            // Create table rows for product details and expandable explanation
+            const trProduct = document.createElement('tr');
+            trProduct.className = "bg-white border-b hover:bg-slate-50";
+            trProduct.innerHTML = `
+                <td class="px-6 py-4 font-medium text-slate-900">${item}</td>
+                <td class="px-6 py-4 text-right font-medium text-slate-900">${purchaseUnits}</td>
+                <td class="px-6 py-4 text-right font-medium text-slate-900">${volumeDisplay}</td>
+                <td class="px-6 py-4 text-right font-bold text-slate-900">${itemCost.toFixed(2)}</td>
+            `;
+            shoppingListContainer.appendChild(trProduct);
+
+            const trDetails = document.createElement('tr');
+            trDetails.className = "bg-white border-b hover:bg-slate-50";
+            trDetails.innerHTML = `
+                <td colspan="4" class="px-0 py-0">
                     <details>
-                        <summary class="flex items-center justify-between cursor-pointer px-6 py-4">
-                            <span class="font-medium text-slate-900">${item}</span>
-                            <span class="text-right font-medium text-slate-900">${purchaseUnitName}</span>
-                            <span class="text-right font-bold text-slate-900">${itemCost.toFixed(2)}</span>
+                        <summary class="flex items-center cursor-pointer px-6 py-2 text-xs text-slate-500 hover:text-slate-700">
+                            Click for calculation details
                         </summary>
                         <div class="p-4 bg-slate-100 text-xs">
                             <h5 class="font-bold mb-1">How we calculated this:</h5>
@@ -1033,16 +1020,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </details>
                 </td>
             `;
-
-            shoppingListContainer.appendChild(tr);
+            shoppingListContainer.appendChild(trDetails);
         });
 
         document.getElementById('totalCost').textContent = `${totalCost.toFixed(2)} PLN`;
         
-        // Update Chart.js charts
-        totalConsumptionChart.data = totalConsumptionData;
-        totalConsumptionChart.update();
-
         cocktailServingsChart.data.labels = Object.keys(cocktailServings);
         cocktailServingsChart.data.datasets[0].data = Object.values(cocktailServings);
         cocktailServingsChart.update();
@@ -1063,13 +1045,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
-
-    // Initialize Total Beverage Consumption Doughnut Chart
-    const totalConsumptionChart = new Chart(document.getElementById('totalConsumptionChart'), {
-        type: 'doughnut',
-        data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
-        options: commonOptions
-    });
 
     // Initialize Estimated Cocktail Servings Bar Chart
     const cocktailServingsChart = new Chart(document.getElementById('cocktailServingsChart'), {
