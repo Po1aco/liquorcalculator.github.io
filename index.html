@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wedding Beverage Calculator</title>
-    <!-- Chosen Palette: Calm Harmony with Primary Accents -->
-    <!-- Application Structure Plan: A two-column layout was chosen for optimal user experience. The left column (1/3 width) is dedicated to all user inputs (guest info, assumptions, event phases, preferences), creating a centralized control panel. The right column (2/3 width) serves as a real-time dashboard, displaying all calculated outputs (charts, totals, shopping list). This structure allows users to immediately see the results of their adjustments without scrolling or navigating away, facilitating an intuitive "cause-and-effect" exploration of the data. The dashboard is further broken down into logical cards for clarity: Event Timeline, Overall Consumption, Cocktail Breakdown, Ice Needs, and a detailed Shopping List. A new FAQ tab has been added to summarize the underlying assumptions, providing transparency and context. A new 'Cocktail Calculator' tab has been introduced for on-demand custom cocktail ingredient calculations. -->
-    <!-- Visualization & Content Choices: Report data is transformed into interactive elements for intuitive understanding. Goal: Inform/Configure -> Input sliders/fields for assumptions and preferences (HTML). Goal: Compare -> Horizontal bar chart for event phase durations (HTML/CSS), bar chart for expected cocktail servings (Chart.js). Goal: Show Proportions -> Donut chart for overall beverage breakdown (Chart.js). Goal: Detail/Organize -> A dynamic, expandable table for the shopping list, where each row reveals its calculation logic on click (HTML/JS). This approach avoids static data presentation, instead encouraging user interaction to explore the data. Key data points like Ice and Total Cost are highlighted in large-display cards for immediate impact. New LLM-powered features for cocktail ideas and shopping tips enhance user engagement and provide additional insights, while the custom cocktail calculator now uses internal logic for direct calculation. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,18 +14,20 @@
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc; /* bg-slate-50 */
         }
-        .slider-thumb-blue::-webkit-slider-thumb { background-color: #3b82f6; }
+        /* Custom slider thumb and track colors for different preference sections */
+        .slider-thumb-blue::-webkit-slider-thumb { background-color: #3b82f6; } /* Blue for hydration */
         .slider-thumb-blue::-moz-range-thumb { background-color: #3b82f6; }
         .slider-track-blue { background-color: #dbeafe; }
 
-        .slider-thumb-red::-webkit-slider-thumb { background-color: #ef4444; }
+        .slider-thumb-red::-webkit-slider-thumb { background-color: #ef4444; } /* Red for women's preferences */
         .slider-thumb-red::-moz-range-thumb { background-color: #ef4444; }
         .slider-track-red { background-color: #fee2e2; }
 
-        .slider-thumb-yellow::-webkit-slider-thumb { background-color: #eab308; }
+        .slider-thumb-yellow::-webkit-slider-thumb { background-color: #eab308; } /* Yellow for men's preferences */
         .slider-thumb-yellow::-moz-range-thumb { background-color: #eab308; }
         .slider-track-yellow { background-color: #fef9c3; }
 
+        /* General slider styling */
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
@@ -56,29 +54,32 @@
             cursor: pointer;
         }
 
+        /* Chart container for responsive sizing */
         .chart-container {
             position: relative;
             width: 100%;
-            max-width: 600px;
+            max-width: 600px; /* Max width for larger screens */
             margin-left: auto;
             margin-right: auto;
-            height: 300px;
-            max-height: 400px;
+            height: 300px; /* Default height */
+            max-height: 400px; /* Max height for charts */
         }
 
         @media (min-width: 768px) {
             .chart-container {
-                height: 350px;
+                height: 350px; /* Adjust height for medium screens */
             }
         }
         
+        /* Styling for details/summary (accordion for shopping list explanations) */
         details > summary {
-            list-style: none;
+            list-style: none; /* Remove default marker */
         }
         details > summary::-webkit-details-marker {
-            display: none;
+            display: none; /* Remove default marker for webkit browsers */
         }
 
+        /* Active state for tab buttons */
         .tab-button.active {
             background-color: #e2e8f0; /* slate-200 */
             color: #1e293b; /* slate-800 */
@@ -95,10 +96,10 @@
 
         <div class="flex flex-col lg:flex-row gap-8">
 
-            <!-- Left Column: Controls -->
+            <!-- Left Column: Controls (1/3 width on large screens) -->
             <aside class="lg:w-1/3 w-full bg-white p-6 rounded-2xl shadow-lg flex-shrink-0">
                 <div class="space-y-6">
-                    <!-- Guest Demographics -->
+                    <!-- Guest Demographics Input Section -->
                     <div>
                         <h3 class="text-lg font-semibold border-b pb-2 mb-4">1. Guest Demographics</h3>
                         <div class="space-y-3">
@@ -121,7 +122,7 @@
                         </div>
                     </div>
 
-                    <!-- Core Assumptions -->
+                    <!-- Core Assumptions Input Section -->
                     <div>
                         <h3 class="text-lg font-semibold border-b pb-2 mb-4">2. Core Assumptions</h3>
                         <div class="space-y-3">
@@ -144,20 +145,20 @@
                         </div>
                     </div>
                     
-                    <!-- Hydration Preferences -->
+                    <!-- Hydration Preferences Input Section -->
                     <div>
                         <h3 class="text-lg font-semibold border-b pb-2 mb-4">3. Hydration Preferences</h3>
                         <div id="hydration-preferences" class="space-y-3"></div>
                     </div>
 
-                    <!-- Event Timeline -->
+                    <!-- Event Timeline Input Section -->
                     <div>
                         <h3 class="text-lg font-semibold border-b pb-2 mb-4">4. Event Phases</h3>
                         <div id="event-phases" class="space-y-4"></div>
                         <button id="add-phase-btn" class="mt-4 w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold py-2 px-4 rounded-md transition-colors">+ Add New Phase</button>
                     </div>
 
-                    <!-- Beverage Preferences per Phase -->
+                    <!-- Beverage Preferences per Phase Input Section -->
                     <div>
                         <h3 class="text-lg font-semibold border-b pb-2 mb-4">5. Beverage Preferences per Phase</h3>
                         <div id="phase-preferences" class="space-y-6"></div>
@@ -165,31 +166,31 @@
                 </div>
             </aside>
 
-            <!-- Right Column: Dashboard -->
+            <!-- Right Column: Dashboard (2/3 width on large screens) -->
             <main class="lg:w-2/3 w-full space-y-8">
-                <!-- Tab Navigation -->
+                <!-- Tab Navigation for Dashboard, Cocktail Calculator, and FAQ -->
                 <div class="flex justify-center mb-4">
                     <button id="dashboard-tab-btn" class="tab-button active px-6 py-3 rounded-l-lg font-semibold bg-slate-100 hover:bg-slate-200 transition-colors">Dashboard</button>
                     <button id="cocktail-calculator-tab-btn" class="tab-button px-6 py-3 font-semibold bg-slate-100 hover:bg-slate-200 transition-colors">Cocktail Calculator</button>
                     <button id="faq-tab-btn" class="tab-button px-6 py-3 rounded-r-lg font-semibold bg-slate-100 hover:bg-slate-200 transition-colors">FAQ</button>
                 </div>
 
-                <!-- Dashboard Section -->
+                <!-- Dashboard Section Content -->
                 <div id="dashboard-section" class="space-y-8">
-                    <!-- Dashboard Introduction -->
+                    <!-- Dashboard Introduction Card -->
                     <div class="bg-white p-6 rounded-2xl shadow-lg">
                         <h2 class="text-2xl font-bold text-slate-900 mb-2">Results Dashboard</h2>
                         <p class="text-slate-600">This section dynamically reflects your choices. Here you'll find event timeline visualizations, a summary of beverage needs, estimated cocktail servings, ice requirements, and a detailed shopping list with costs. Each element is interactive to help you understand and optimize your planning.</p>
                     </div>
                     
-                    <!-- Event Timeline Visualization -->
+                    <!-- Event Timeline Visualization Card -->
                     <div class="bg-white p-6 rounded-2xl shadow-lg">
                         <h3 class="text-xl font-semibold mb-4">Event Timeline</h3>
                          <p class="text-sm text-slate-500 mb-4">This visualization shows the individual phases of your wedding and their duration. Use this timeline to ensure your schedule is balanced and that you have planned beverages appropriately for each stage of the celebration.</p>
                         <div id="timeline-visualization" class="space-y-3"></div>
                     </div>
 
-                    <!-- Charts -->
+                    <!-- Charts Section (Grid for two charts side-by-side on medium screens) -->
                     <div class="grid md:grid-cols-2 gap-8">
                         <div class="bg-white p-6 rounded-2xl shadow-lg">
                             <h3 class="text-xl font-semibold mb-4">Total Beverage Consumption</h3>
@@ -205,7 +206,7 @@
                         </div>
                     </div>
 
-                    <!-- Ice Calculation -->
+                    <!-- Ice Calculation Card -->
                      <div class="bg-white p-6 rounded-2xl shadow-lg">
                         <h3 class="text-xl font-semibold mb-4">Ice Requirements</h3>
                         <p class="text-sm text-slate-500 mb-4">Below is the total estimated amount of ice needed for your event, including ice for drinks, cocktails, and an additional reserve for chilling bottles. Ensure you have enough to keep beverages at the perfect temperature throughout the night.</p>
@@ -219,7 +220,7 @@
                     </div>
 
 
-                    <!-- Shopping List -->
+                    <!-- Shopping List & Cost Estimate Card -->
                     <div class="bg-white p-6 rounded-2xl shadow-lg">
                         <h3 class="text-xl font-semibold mb-2">Shopping List & Cost Estimate</h3>
                          <p class="text-sm text-slate-500 mb-4">This is your final, consolidated shopping list. It includes all necessary beverages and ingredients, their required quantities, estimated unit prices, and total cost. Click on any item to see a detailed explanation of how its quantity was calculated.</p>
@@ -246,7 +247,7 @@
                     </div>
                 </div>
 
-                <!-- Cocktail Calculator Section -->
+                <!-- Cocktail Calculator Section Content -->
                 <div id="cocktail-calculator-section" class="bg-white p-6 rounded-2xl shadow-lg hidden">
                     <h3 class="text-xl font-semibold mb-4">Custom Cocktail Ingredient Calculator</h3>
                     <p class="text-sm text-slate-500 mb-4">Calculate ingredients for a specific cocktail based on custom guest and drink counts. This tool uses the internal recipe data for precise estimations.</p>
@@ -270,7 +271,7 @@
                     <div id="custom-cocktail-output" class="mt-4 p-3 bg-slate-100 rounded-md text-sm hidden"></div>
                 </div>
 
-                <!-- FAQ Section -->
+                <!-- FAQ Section Content -->
                 <div id="faq-section" class="bg-white p-6 rounded-2xl shadow-lg hidden">
                     <h2 class="text-2xl font-bold text-slate-900 mb-4">Frequently Asked Questions & Assumptions</h2>
                     <p class="text-slate-600 mb-6">This section summarizes the core assumptions and data points used in the calculations. Understanding these helps you interpret the results and make informed adjustments.</p>
@@ -284,6 +285,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Initial data for the calculator, including guest counts, assumptions,
+    // hydration preferences, event phases, beverage preferences, recipes,
+    // servings per bottle, and prices.
     const initialData = {
         guests: {
             womenDrinkers: 10,
@@ -311,23 +315,23 @@ document.addEventListener('DOMContentLoaded', () => {
         beverages: {
             women: ["Prosecco", "White Wine", "Mojito", "Aperol Spritz", "Hugo", "Beer"],
             men: ["White Wine", "Whiskey and Cola", "Mojito", "Aperol Spritz", "Hugo", "Beer"],
-            nonDrinkers: ["Non-alcoholic beer", "Non-alcoholic Prosecco"] // New: Non-drinker options
+            nonDrinkers: ["Non-alcoholic beer", "Non-alcoholic Prosecco"] // Non-drinker options
         },
         preferences: {
             1: { // Friday Reception
                 women: { "Prosecco": 25, "White Wine": 0, "Mojito": 25, "Aperol Spritz": 25, "Hugo": 25, "Beer": 0 },
                 men: { "White Wine": 0, "Whiskey and Cola": 70, "Mojito": 15, "Beer": 15, "Aperol Spritz": 0, "Hugo": 0 },
-                nonDrinkers: { "Non-alcoholic beer": 50, "Non-alcoholic Prosecco": 50 } // New: Default for non-drinkers
+                nonDrinkers: { "Non-alcoholic beer": 50, "Non-alcoholic Prosecco": 50 }
             },
             2: { // Saturday Grill
                 women: { "Prosecco": 0, "White Wine": 0, "Mojito": 33, "Aperol Spritz": 21, "Hugo": 9, "Beer": 37 },
                 men: { "White Wine": 0, "Whiskey and Cola": 10, "Mojito": 20, "Beer": 70, "Aperol Spritz": 0, "Hugo": 0 },
-                nonDrinkers: { "Non-alcoholic beer": 60, "Non-alcoholic Prosecco": 40 } // New: Default for non-drinkers
+                nonDrinkers: { "Non-alcoholic beer": 60, "Non-alcoholic Prosecco": 40 }
             },
             3: { // Saturday Party
                 women: { "Prosecco": 35, "White Wine": 0, "Mojito": 20, "Aperol Spritz": 25, "Hugo": 10, "Beer": 10 },
                 men: { "White Wine": 5, "Whiskey and Cola": 60, "Mojito": 15, "Beer": 15, "Hugo": 5 },
-                nonDrinkers: { "Non-alcoholic beer": 40, "Non-alcoholic Prosecco": 60 } // New: Default for non-drinkers
+                nonDrinkers: { "Non-alcoholic beer": 40, "Non-alcoholic Prosecco": 60 }
             }
         },
         recipes: {
@@ -370,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
             "Water": { size: 1000, servings: 2.5 },
             "Elderflower Liqueur": { size: 700, servings: 35 },
             "White Wine": { size: 750, servings: 5 },
-            "Tonic Water": { size: 1000, servings: 4 } // Added for Hugo
+            "Tonic Water": { size: 1000, servings: 4 }
         },
         prices: {
             "Prosecco": 44.99,
@@ -394,22 +398,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Deep copy initial data to state to allow modifications
     let state = JSON.parse(JSON.stringify(initialData));
-    let nextPhaseId = 4;
+    let nextPhaseId = 4; // Counter for new event phases
     let currentShoppingList = {}; // To store the latest shopping list for LLM prompt
 
     // --- UI RENDER FUNCTIONS ---
+
+    /**
+     * Renders all input sections and updates calculations.
+     */
     function renderAll() {
         renderGuestInputs();
         renderAssumptionInputs();
         renderHydrationPreferences();
         renderEventPhases();
         renderPhasePreferences();
-        populateCustomCocktailSelect(); // New: Populate custom cocktail dropdown
-        renderFAQ(); // New: Render FAQ content
+        populateCustomCocktailSelect(); // Populate custom cocktail dropdown
+        renderFAQ(); // Render FAQ content
         updateAllCalculations();
     }
     
+    /**
+     * Renders the guest demographic input fields with current state values.
+     */
     function renderGuestInputs() {
         document.getElementById('womenDrinkers').value = state.guests.womenDrinkers;
         document.getElementById('womenNonDrinkers').value = state.guests.womenNonDrinkers;
@@ -417,6 +429,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('menNonDrinkers').value = state.guests.menNonDrinkers;
     }
 
+    /**
+     * Renders the core assumptions input fields with current state values.
+     */
     function renderAssumptionInputs() {
         document.getElementById('drinksPerHour').value = state.assumptions.drinksPerHour;
         document.getElementById('hydrationRate').value = state.assumptions.hydrationRate;
@@ -424,6 +439,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('extraIceBuckets').value = state.assumptions.extraIceBuckets;
     }
 
+    /**
+     * Renders the hydration preference sliders and labels.
+     * Adjusts other slider values to maintain a total of 100%.
+     */
     function renderHydrationPreferences() {
         const container = document.getElementById('hydration-preferences');
         container.innerHTML = '';
@@ -440,6 +459,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    /**
+     * Renders the event phase input fields (name, start/end times).
+     */
     function renderEventPhases() {
         const container = document.getElementById('event-phases');
         container.innerHTML = '';
@@ -460,6 +482,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    /**
+     * Renders the beverage preference sliders for each event phase and gender.
+     * Adjusts other slider values to maintain a total of 100% within each group.
+     */
     function renderPhasePreferences() {
         const container = document.getElementById('phase-preferences');
         container.innerHTML = '';
@@ -506,11 +532,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Function to populate the custom cocktail select dropdown
+    /**
+     * Populates the custom cocktail select dropdown with available cocktail recipes.
+     */
     function populateCustomCocktailSelect() {
         const select = document.getElementById('customCocktailSelect');
-        if (!select) return; // Check if element exists
-        select.innerHTML = ''; // Clear existing options
+        if (!select) return; 
+        select.innerHTML = ''; 
         Object.keys(state.recipes).forEach(cocktailName => {
             const option = document.createElement('option');
             option.value = cocktailName;
@@ -519,14 +547,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Function to render FAQ content
+    /**
+     * Renders the FAQ content dynamically based on initial data assumptions.
+     */
     function renderFAQ() {
         const faqContent = document.getElementById('faq-content');
         faqContent.innerHTML = `
             <h4 class="text-lg font-semibold text-slate-800">Guest Demographics:</h4>
             <ul class="list-disc list-inside ml-4 space-y-1">
                 <li>Women (Alcohol Drinkers): ${initialData.guests.womenDrinkers}</li>
-                <li>Women (Non-Drinkers): ${initialData.guests.womenNonDrinkers}</li>
+                <li>Women (Non-Drinkers): ${initialData.guests.nonDrinkers}</li>
                 <li>Men (Alcohol Drinkers): ${initialData.guests.menDrinkers}</li>
                 <li>Men (Non-Drinkers): ${initialData.guests.menNonDrinkers}</li>
             </ul>
@@ -576,57 +606,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- EVENT HANDLERS ---
+
+    // Universal event listener for input changes to update state and calculations
     document.body.addEventListener('input', (e) => {
-        // Guest Inputs
+        // Handle Guest Inputs
         if(['womenDrinkers', 'womenNonDrinkers', 'menDrinkers', 'menNonDrinkers'].includes(e.target.id)) {
             state.guests[e.target.id] = parseInt(e.target.value) || 0;
         }
-        // Assumption Inputs
+        // Handle Assumption Inputs
         if(['drinksPerHour', 'hydrationRate', 'icePerGuest', 'extraIceBuckets'].includes(e.target.id)) {
             state.assumptions[e.target.id] = parseFloat(e.target.value) || 0;
         }
-        // Hydration Preferences
+        // Handle Hydration Preferences sliders
         if(e.target.parentElement.parentElement.id === 'hydration-preferences') {
             const name = e.target.dataset.name;
             const newValue = parseInt(e.target.value);
             const targetPref = state.hydrationPreferences.find(p => p.name === name);
             const others = state.hydrationPreferences.filter(p => p.name !== name);
-            const oldTotal = 100 - targetPref.percent;
+            
             targetPref.percent = newValue;
-            const newTotal = 100 - newValue;
+            const newTotalForOthers = 100 - newValue;
             
             let totalOfOthers = others.reduce((sum, p) => sum + p.percent, 0);
-            if (totalOfOthers === 0) { // Avoid division by zero if all others are 0
-                 others.forEach(p => p.percent = newTotal / others.length);
-            } else {
-                 others.forEach(p => p.percent = Math.round(p.percent / totalOfOthers * newTotal));
+            if (totalOfOthers === 0) { // Distribute evenly if all others were 0
+                others.forEach(p => p.percent = newTotalForOthers / others.length);
+            } else { // Distribute proportionally
+                others.forEach(p => p.percent = Math.round(p.percent / totalOfOthers * newTotalForOthers));
             }
             
-            // Adjust to ensure total is exactly 100
+            // Adjust to ensure total is exactly 100 (due to rounding)
             let currentTotal = state.hydrationPreferences.reduce((sum, p) => sum + p.percent, 0);
             if (currentTotal !== 100 && others.length > 0) {
                 others[0].percent += (100 - currentTotal);
             }
 
-            renderHydrationPreferences();
+            renderHydrationPreferences(); // Re-render to show updated percentages
         }
 
-        // Event Phase Inputs (Name, Time)
+        // Handle Event Phase Inputs (Name, Time)
         if (e.target.dataset.id && e.target.closest('#event-phases')) {
             const id = parseInt(e.target.dataset.id);
             const phase = state.eventPhases.find(p => p.id === id);
             if (e.target.type === 'text') {
                 phase.name = e.target.value;
-                renderPhasePreferences();
+                renderPhasePreferences(); // Re-render phase preferences to update phase names
             } else if (e.target.type === 'time') {
                 phase[e.target.dataset.type] = e.target.value;
             }
         }
         
-        // Beverage Preferences Sliders
+        // Handle Beverage Preferences Sliders (per phase, per gender)
         const prefContainer = e.target.closest('[data-phase-id]');
         if(prefContainer) {
-            const phaseId = prefContainer.dataset.phaseId;
+            const phaseId = parseInt(prefContainer.dataset.phaseId);
             const gender = prefContainer.dataset.gender; // 'women', 'men', or 'nonDrinkers'
             const beverage = e.target.dataset.beverage;
             const newValue = parseInt(e.target.value);
@@ -639,35 +671,37 @@ document.addEventListener('DOMContentLoaded', () => {
             let totalOfOthers = otherSliders.reduce((sum, slider) => sum + prefs[slider.dataset.beverage], 0);
             const newTotalForOthers = 100 - newValue;
 
-            if (totalOfOthers === 0) { // Avoid division by zero
+            if (totalOfOthers === 0) { // Distribute evenly if all others were 0
                 otherSliders.forEach(slider => {
                     prefs[slider.dataset.beverage] = Math.floor(newTotalForOthers / otherSliders.length);
                 });
-            } else {
+            } else { // Distribute proportionally
                 otherSliders.forEach(slider => {
                     prefs[slider.dataset.beverage] = Math.round((prefs[slider.dataset.beverage] / totalOfOthers) * newTotalForOthers);
                 });
             }
             
+            // Adjust to ensure total is exactly 100 (due to rounding)
             let currentTotal = Object.values(prefs).reduce((sum, val) => sum + val, 0);
              if (currentTotal !== 100 && otherSliders.length > 0) {
                  prefs[otherSliders[0].dataset.beverage] += (100 - currentTotal);
             }
 
-            renderPhasePreferences();
+            renderPhasePreferences(); // Re-render to show updated percentages
         }
 
-        updateAllCalculations();
+        updateAllCalculations(); // Recalculate everything on any input change
     });
     
+    // Event listener for adding a new event phase
     document.getElementById('add-phase-btn').addEventListener('click', () => {
         const newPhase = { id: nextPhaseId, name: `New Phase ${nextPhaseId-3}`, start: "20:00", end: "23:00" };
         state.eventPhases.push(newPhase);
-        // Create default preferences for the new phase
+        // Initialize default preferences for the new phase
         state.preferences[nextPhaseId] = {
             women: Object.fromEntries(state.beverages.women.map((bev, i) => [bev, i === 0 ? 100 : 0])),
             men: Object.fromEntries(state.beverages.men.map((bev, i) => [bev, i === 1 ? 100 : 0])),
-            nonDrinkers: Object.fromEntries(state.beverages.nonDrinkers.map((bev, i) => [bev, i === 0 ? 100 : 0])), // Default for new phase
+            nonDrinkers: Object.fromEntries(state.beverages.nonDrinkers.map((bev, i) => [bev, i === 0 ? 100 : 0])),
         };
         nextPhaseId++;
         renderEventPhases();
@@ -675,61 +709,74 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAllCalculations();
     });
     
+    // Event listener for removing an event phase
     document.body.addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-phase-btn')) {
             const id = parseInt(e.target.dataset.id);
-            state.eventPhases = state.eventPhases.filter(p => p.id !== id); // Corrected typo: eventHases -> eventPhases
-            delete state.preferences[id];
+            state.eventPhases = state.eventPhases.filter(p => p.id !== id);
+            delete state.preferences[id]; // Remove associated preferences
             renderEventPhases();
             renderPhasePreferences();
             updateAllCalculations();
         }
     });
 
-    // Tab switching logic
+    // Tab switching logic for Dashboard, Cocktail Calculator, and FAQ sections
     document.getElementById('dashboard-tab-btn').addEventListener('click', () => {
         document.getElementById('dashboard-section').classList.remove('hidden');
-        document.getElementById('cocktail-calculator-section').classList.add('hidden'); // Hide new tab
+        document.getElementById('cocktail-calculator-section').classList.add('hidden');
         document.getElementById('faq-section').classList.add('hidden');
         
         document.getElementById('dashboard-tab-btn').classList.add('active');
-        document.getElementById('cocktail-calculator-tab-btn').classList.remove('active'); // Deactivate new tab button
+        document.getElementById('cocktail-calculator-tab-btn').classList.remove('active');
         document.getElementById('faq-tab-btn').classList.remove('active');
     });
 
     document.getElementById('cocktail-calculator-tab-btn').addEventListener('click', () => {
         document.getElementById('dashboard-section').classList.add('hidden');
-        document.getElementById('cocktail-calculator-section').classList.remove('hidden'); // Show new tab
+        document.getElementById('cocktail-calculator-section').classList.remove('hidden');
         document.getElementById('faq-section').classList.add('hidden');
         
         document.getElementById('dashboard-tab-btn').classList.remove('active');
-        document.getElementById('cocktail-calculator-tab-btn').classList.add('active'); // Activate new tab button
+        document.getElementById('cocktail-calculator-tab-btn').classList.add('active');
         document.getElementById('faq-tab-btn').classList.remove('active');
     });
 
     document.getElementById('faq-tab-btn').addEventListener('click', () => {
         document.getElementById('dashboard-section').classList.add('hidden');
-        document.getElementById('cocktail-calculator-section').classList.add('hidden'); // Hide new tab
+        document.getElementById('cocktail-calculator-section').classList.add('hidden');
         document.getElementById('faq-section').classList.remove('hidden');
         
         document.getElementById('dashboard-tab-btn').classList.remove('active');
-        document.getElementById('cocktail-calculator-tab-btn').classList.remove('active'); // Deactivate new tab button
+        document.getElementById('cocktail-calculator-tab-btn').classList.remove('active');
         document.getElementById('faq-tab-btn').classList.add('active');
     });
 
 
     // --- CALCULATION LOGIC ---
+
+    /**
+     * Calculates the duration of an event phase in hours.
+     * Handles cases where the end time is on the next day.
+     * @param {string} start - Start time in "HH:MM" format.
+     * @param {string} end - End time in "HH:MM" format.
+     * @returns {number} Duration in hours.
+     */
     function getDuration(start, end) {
         const startDate = new Date(`1970-01-01T${start}:00`);
         let endDate = new Date(`1970-01-01T${end}:00`);
+        // If end time is earlier than start time, assume it's the next day
         if (endDate < startDate) {
             endDate.setDate(endDate.getDate() + 1);
         }
-        return (endDate - startDate) / (1000 * 60 * 60); // hours
+        return (endDate - startDate) / (1000 * 60 * 60); // Convert milliseconds to hours
     }
 
+    /**
+     * Performs all calculations based on the current state and updates the dashboard.
+     */
     function updateAllCalculations() {
-        // Guest totals
+        // Calculate total guest counts
         const womenDrinkers = state.guests.womenDrinkers;
         const menDrinkers = state.guests.menDrinkers;
         const totalDrinkers = womenDrinkers + menDrinkers;
@@ -738,9 +785,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalNonDrinkers = womenNonDrinkers + menNonDrinkers;
         const totalGuests = totalDrinkers + totalNonDrinkers;
         
-        let shoppingList = {};
-        let explanationList = {};
+        let shoppingList = {}; // Stores aggregated items and their total amounts
+        let explanationList = {}; // Stores calculation formulas for each item
 
+        /**
+         * Adds an item to the shopping list, aggregating amounts and storing explanations.
+         * @param {string} item - The name of the product.
+         * @param {number} amount - The quantity to add.
+         * @param {string} unit - The unit of the quantity (e.g., 'L', 'kg').
+         * @param {string} formula - The explanation for how the amount was calculated.
+         */
         function addToShoppingList(item, amount, unit, formula) {
             if (!shoppingList[item]) {
                 shoppingList[item] = { amount: 0, unit: unit };
@@ -750,48 +804,48 @@ document.addEventListener('DOMContentLoaded', () => {
             explanationList[item].push(formula);
         }
 
-        // 1. Toasts
-        const toastServingSize = 0.150; // 150ml
+        // 1. Calculate quantities for toasts (Prosecco and Non-alcoholic Prosecco)
+        const toastServingSize = 0.150; // 150ml per toast
         addToShoppingList("Prosecco", totalDrinkers * toastServingSize, 'L', `Toast for drinkers: ${totalDrinkers} guests * 150ml = ${ (totalDrinkers * toastServingSize).toFixed(2) } L`);
         addToShoppingList("Non-alcoholic Prosecco", totalNonDrinkers * toastServingSize, 'L', `Toast for non-drinkers: ${totalNonDrinkers} guests * 150ml = ${ (totalNonDrinkers * toastServingSize).toFixed(2) } L`);
         
-        // 2. Hydration
+        // 2. Calculate quantities for hydration beverages
         const totalEventDuration = state.eventPhases.reduce((sum, phase) => sum + getDuration(phase.start, phase.end), 0);
         const hydrationPerGuest = state.assumptions.hydrationRate / 1000 * (totalEventDuration / 8); // Liters per guest for whole event
         const totalHydration = totalGuests * hydrationPerGuest;
         
         state.hydrationPreferences.forEach(pref => {
             const amount = totalHydration * (pref.percent / 100);
-            const item = pref.name === 'Soda' ? 'Tonic Water' : pref.name; // Use Tonic Water for Soda if needed, based on recipes
-            addToShoppingList(item, amount, 'L', `Hydration (${pref.name}): ${totalGuests} guests * ${hydrationPerGuest.toFixed(2)}L/guest * ${pref.percent}% = ${amount.toFixed(2)} L`);
+            // Corrected: Use pref.name directly for hydration items
+            addToShoppingList(pref.name, amount, 'L', `Hydration (${pref.name}): ${totalGuests} guests * ${hydrationPerGuest.toFixed(2)}L/guest * ${pref.percent}% = ${amount.toFixed(2)} L`);
         });
 
-        // 3. Alcoholic Drinks per phase & Non-alcoholic from preferences
-        let cocktailServings = {};
+        // 3. Calculate quantities for alcoholic and non-alcoholic drinks based on phase preferences
+        let cocktailServings = {}; // To track total servings for each cocktail
 
         state.eventPhases.forEach(phase => {
             const duration = getDuration(phase.start, phase.end);
             const drinksPerPersonPerHour = state.assumptions.drinksPerHour;
             
             const phasePrefs = state.preferences[phase.id];
-            if (!phasePrefs) return;
+            if (!phasePrefs) return; // Skip if no preferences for this phase (e.g., newly added phase without default prefs)
 
-            // Women (Alcoholic)
+            // Women (Alcoholic Drinkers) beverage calculations
             Object.entries(phasePrefs.women).forEach(([bev, pct]) => {
                 if (pct > 0) {
                     const totalServings = womenDrinkers * drinksPerPersonPerHour * duration * (pct / 100);
                     const formula = `${phase.name} (Women - ${bev}): ${womenDrinkers} guests * ${drinksPerPersonPerHour.toFixed(2)} drinks/h * ${duration.toFixed(1)}h * ${pct}% = ${totalServings.toFixed(2)} servings`;
-                    if (state.recipes[bev]) { // It's a cocktail
+                    if (state.recipes[bev]) { // If it's a cocktail, add to cocktail servings
                         if (!cocktailServings[bev]) cocktailServings[bev] = 0;
                         cocktailServings[bev] += totalServings;
-                    } else { // It's a simple beverage
+                    } else { // If it's a simple beverage, add directly to shopping list
                         const servingSize = (state.servingsPerBottle[bev]?.size || 750) / 1000; // in Liters
                         addToShoppingList(bev, totalServings * servingSize, 'L', formula);
                     }
                 }
             });
 
-            // Men (Alcoholic)
+            // Men (Alcoholic Drinkers) beverage calculations
             Object.entries(phasePrefs.men).forEach(([bev, pct]) => {
                  if (pct > 0) {
                     const totalServings = menDrinkers * drinksPerPersonPerHour * duration * (pct / 100);
@@ -806,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Non-Drinkers (Non-alcoholic beer, Non-alcoholic Prosecco)
+            // Non-Drinkers beverage calculations (Non-alcoholic beer, Non-alcoholic Prosecco)
             Object.entries(phasePrefs.nonDrinkers).forEach(([bev, pct]) => {
                 if (pct > 0) {
                     const totalServings = totalNonDrinkers * drinksPerPersonPerHour * duration * (pct / 100);
@@ -817,27 +871,28 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         
-        // 4. Cocktail Ingredients
+        // 4. Calculate quantities for cocktail ingredients based on total cocktail servings
         Object.entries(cocktailServings).forEach(([cocktailName, totalServings]) => {
             state.recipes[cocktailName].forEach(ingredient => {
                 let amount = ingredient.qty * totalServings;
-                let unit = 'g';
+                let unit = ingredient.unit;
                 let formula = `Ingredient for ${cocktailName}: ${totalServings.toFixed(0)} servings * ${ingredient.qty} ${ingredient.unit} = `;
                 
+                // Convert to more practical units for shopping list
                 if (ingredient.unit === 'ml') {
-                    amount /= 1000; // to Liters
+                    amount /= 1000; // Convert ml to Liters
                     unit = 'L';
                     formula += `${amount.toFixed(2)} L`;
                 } else if(ingredient.unit === 'unit') {
                     unit = 'unit(s)';
-                     formula += `${amount.toFixed(1)} unit(s)`;
+                    formula += `${amount.toFixed(1)} unit(s)`;
                 } else if(ingredient.unit === 'leaves') {
                     unit = 'bunches';
-                    const leavesPerBunch = 50;
+                    const leavesPerBunch = 50; // Assumption for mint leaves per bunch
                     amount /= leavesPerBunch;
                     formula += `${(ingredient.qty * totalServings).toFixed(0)} leaves / ${leavesPerBunch} leaves/bunch = ${amount.toFixed(2)} bunches`;
-                } else { // grams
-                    amount /= 1000; // to kg
+                } else { // Default to grams, convert to kg
+                    amount /= 1000; // Convert g to kg
                     unit = 'kg';
                     formula += `${amount.toFixed(2)} kg`;
                 }
@@ -845,15 +900,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         
-        // 5. Ice Calculation
-        const baseIce = (totalGuests * state.assumptions.icePerGuest / 1000) * (totalEventDuration/24);
-        const cocktailIceAllowance = 0.2; // 200g per cocktail
-        const cocktailIce = Object.values(cocktailServings).reduce((sum, servings) => sum + servings, 0) * cocktailIceAllowance;
+        // 5. Calculate total ice requirements
+        const baseIce = (totalGuests * state.assumptions.icePerGuest / 1000) * (totalEventDuration/24); // Ice for guests based on duration
+        const cocktailIceAllowance = 0.2; // 200g (0.2kg) per cocktail serving
+        const totalCocktailServings = Object.values(cocktailServings).reduce((sum, servings) => sum + servings, 0);
+        const cocktailIce = totalCocktailServings * cocktailIceAllowance;
         const totalIceKg = baseIce + cocktailIce + state.assumptions.extraIceBuckets;
         const iceFormula = `
-            Ice for guests: ${totalGuests} guests * ${(state.assumptions.icePerGuest/1000).toFixed(2)}kg * (${(totalEventDuration/24).toFixed(2)} days) = ${baseIce.toFixed(2)} kg <br>
-            Ice for cocktails: ${Object.values(cocktailServings).reduce((sum, servings) => sum + servings, 0).toFixed(0)} servings * ${cocktailIceAllowance}kg = ${cocktailIce.toFixed(2)} kg <br>
-            Additional reserve: ${state.assumptions.extraIceBuckets} kg <br>
+            Ice for guests: ${totalGuests} guests * ${(state.assumptions.icePerGuest/1000).toFixed(2)}kg/day * (${(totalEventDuration/24).toFixed(2)} days) = ${baseIce.toFixed(2)} kg <br>
+            Ice for cocktails: ${totalCocktailServings.toFixed(0)} servings * ${cocktailIceAllowance}kg/serving = ${cocktailIce.toFixed(2)} kg <br>
+            Additional reserve for buckets: ${state.assumptions.extraIceBuckets} kg <br>
             <b>Total: ${totalIceKg.toFixed(2)} kg</b>
         `;
         addToShoppingList("Ice", totalIceKg, 'kg', iceFormula);
@@ -863,21 +919,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // Store the latest shopping list for LLM prompt
         currentShoppingList = JSON.parse(JSON.stringify(shoppingList));
 
-        // Finalize Shopping List
+        // Finalize Shopping List and update dashboard UI
         updateDashboard(shoppingList, explanationList, cocktailServings);
     }
     
     // --- DASHBOARD UPDATE ---
+
+    /**
+     * Updates the dashboard UI elements including timeline, charts, and shopping list.
+     * @param {object} finalList - The aggregated shopping list with amounts.
+     * @param {object} explanationList - Detailed explanations for each shopping list item.
+     * @param {object} cocktailServings - Total servings calculated for each cocktail.
+     */
     function updateDashboard(finalList, explanationList, cocktailServings) {
-        // Timeline
+        // Update Event Timeline Visualization
         const timelineContainer = document.getElementById('timeline-visualization');
         timelineContainer.innerHTML = '';
         const totalDuration = state.eventPhases.reduce((sum, p) => sum + getDuration(p.start, p.end), 0);
 
         state.eventPhases.forEach((phase, index) => {
             const duration = getDuration(phase.start, phase.end);
-            const widthPercentage = totalDuration > 0 ? (duration / totalDuration) * 100 : 33;
-            const colorClass = ['bg-blue-400', 'bg-red-400', 'bg-yellow-400'][index % 3];
+            const widthPercentage = totalDuration > 0 ? (duration / totalDuration) * 100 : (100 / state.eventPhases.length); // Distribute evenly if totalDuration is 0
+            const colorClass = ['bg-blue-400', 'bg-red-400', 'bg-yellow-400'][index % 3]; // Cycle through colors
             const div = document.createElement('div');
             div.className = 'w-full';
             div.innerHTML = `
@@ -892,34 +955,42 @@ document.addEventListener('DOMContentLoaded', () => {
             timelineContainer.appendChild(div);
         });
 
-        // Charts
+        // Prepare data for Total Beverage Consumption Chart (Doughnut)
         const totalConsumptionData = {
             labels: ['Alcoholic', 'Non-Alcoholic', 'Cocktail Ingredients'],
             datasets: [{
                 data: [0, 0, 0],
-                backgroundColor: ['#ef4444', '#3b82f6', '#eab308'],
+                backgroundColor: ['#ef4444', '#3b82f6', '#eab308'], // Red, Blue, Yellow
             }]
         };
         let totalCost = 0;
         const shoppingListContainer = document.getElementById('shopping-list');
         shoppingListContainer.innerHTML = '';
 
+        // Define categories for chart aggregation
         const alcoholTypes = ["Prosecco", "White Wine", "Whiskey", "Beer", "Aperol", "White Rum", "Elderflower Liqueur"];
-        const hydrationTypes = ["Water", "Coca Cola", "Ginger Ale", "Soda", "Tonic Water", "Non-alcoholic beer", "Non-alcoholic Prosecco"]; // Added new non-alcoholic options
+        const hydrationTypes = ["Water", "Coca Cola", "Ginger Ale", "Soda", "Tonic Water", "Non-alcoholic beer", "Non-alcoholic Prosecco"];
         const cocktailIngredients = ["Limes", "Oranges", "Mint", "Sugar"];
 
+        // Populate shopping list table and aggregate data for charts
         Object.entries(finalList).forEach(([item, data]) => {
-            if(alcoholTypes.includes(item)) totalConsumptionData.datasets[0].data[0] += data.amount;
-            else if(hydrationTypes.includes(item)) totalConsumptionData.datasets[0].data[1] += data.amount;
-            else if(!cocktailIngredients.includes(item) && item !== "Ice") totalConsumptionData.datasets[0].data[2] += data.amount;
+            // Aggregate amounts for the Total Beverage Consumption Chart
+            if(alcoholTypes.includes(item)) {
+                totalConsumptionData.datasets[0].data[0] += data.amount; // Alcoholic
+            } else if(hydrationTypes.includes(item)) {
+                totalConsumptionData.datasets[0].data[1] += data.amount; // Non-Alcoholic
+            } else if(cocktailIngredients.includes(item)) { // Specific cocktail ingredients
+                totalConsumptionData.datasets[0].data[2] += data.amount; // Cocktail Ingredients
+            }
 
             let purchaseUnits = 0;
             let purchaseUnitName = '';
             let itemCost = 0;
-            let price = state.prices[item] || 0;
+            let price = state.prices[item] || 0; // Get price from state, default to 0 if not found
             
+            // Determine purchase units and cost based on item type and unit
             if (data.unit === 'L') {
-                const bottleSize = (state.servingsPerBottle[item]?.size || 1000) / 1000;
+                const bottleSize = (state.servingsPerBottle[item]?.size || 1000) / 1000; // Convert ml to L
                 purchaseUnits = Math.ceil(data.amount / bottleSize);
                 purchaseUnitName = `${purchaseUnits} x ${bottleSize * 1000}ml`;
                 itemCost = purchaseUnits * price;
@@ -934,9 +1005,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (data.unit === 'kg') {
                 purchaseUnits = Math.ceil(data.amount);
                 if (item === "Ice") {
-                    purchaseUnits = Math.ceil(data.amount / 5); // Assume 5kg bags
+                    purchaseUnits = Math.ceil(data.amount / 5); // Assume 5kg bags for ice
                     purchaseUnitName = `${purchaseUnits} x 5kg`;
-                    itemCost = purchaseUnits * 10; // Assume 10 PLN per 5kg bag
+                    itemCost = purchaseUnits * 10; // Assume 10 PLN per 5kg bag of ice
                 } else {
                     purchaseUnitName = `${purchaseUnits} kg`;
                     itemCost = purchaseUnits * price;
@@ -944,6 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             totalCost += itemCost;
             
+            // Create table row with expandable details for explanation
             const tr = document.createElement('tr');
             tr.className = "bg-white border-b hover:bg-slate-50";
             tr.innerHTML = `
@@ -967,7 +1039,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('totalCost').textContent = `${totalCost.toFixed(2)} PLN`;
         
-        // Update charts
+        // Update Chart.js charts
         totalConsumptionChart.data = totalConsumptionData;
         totalConsumptionChart.update();
 
@@ -977,24 +1049,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- CHART SETUP ---
+
+    // Set global font family for Chart.js
     Chart.defaults.font.family = "'Inter', sans-serif";
+    // Common options for all charts
     const commonOptions = {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: false, // Allow charts to resize freely
         plugins: {
             legend: {
                 position: 'bottom',
-                 labels: { padding: 20 }
+                labels: { padding: 20 }
             }
         }
     };
 
+    // Initialize Total Beverage Consumption Doughnut Chart
     const totalConsumptionChart = new Chart(document.getElementById('totalConsumptionChart'), {
         type: 'doughnut',
         data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
         options: commonOptions
     });
 
+    // Initialize Estimated Cocktail Servings Bar Chart
     const cocktailServingsChart = new Chart(document.getElementById('cocktailServingsChart'), {
         type: 'bar',
         data: {
@@ -1002,28 +1079,35 @@ document.addEventListener('DOMContentLoaded', () => {
             datasets: [{
                 label: 'Estimated Servings',
                 data: [],
-                backgroundColor: ['#3b82f6', '#ef4444', '#eab308', '#84cc16', '#a855f7', '#14b8a6'],
-                borderColor: 'rgba(255, 255, 255, 0)',
+                backgroundColor: ['#3b82f6', '#ef4444', '#eab308', '#84cc16', '#a855f7', '#14b8a6'], // Various colors for bars
+                borderColor: 'rgba(255, 255, 255, 0)', // No border for bars
                 borderWidth: 1
             }]
         },
         options: {
             ...commonOptions,
-            indexAxis: 'y',
+            indexAxis: 'y', // Horizontal bars
             scales: {
-                x: { beginAtZero: true, grid: { display: false } },
-                y: { grid: { display: false } }
+                x: { beginAtZero: true, grid: { display: false } }, // Hide x-axis grid lines
+                y: { grid: { display: false } } // Hide y-axis grid lines
             },
-            plugins: { legend: { display: false } }
+            plugins: { legend: { display: false } } // Hide legend for bar chart
         }
     });
 
     // --- GEMINI API INTEGRATION ---
 
+    /**
+     * Calls the Gemini API with a given prompt and displays the response.
+     * Handles loading states and errors.
+     * @param {string} prompt - The text prompt to send to the LLM.
+     * @param {string} type - The type of API call ('shoppingTips' or 'cocktailIdeas') to determine output div and button.
+     */
     async function callGeminiAPI(prompt, type) {
         let outputDiv;
         let button;
 
+        // Determine which output div and button to use based on the call type
         if (type === 'shoppingTips') {
             outputDiv = document.getElementById('shopping-tips-output');
             button = document.getElementById('get-shopping-tips-btn');
@@ -1035,6 +1119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Basic error handling for missing UI elements
         if (!outputDiv) {
             console.error(`Error: Output div for type "${type}" not found.`);
             return;
@@ -1044,6 +1129,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Show loading indicator and disable button
         outputDiv.classList.remove('hidden');
         outputDiv.innerHTML = '<div class="text-center text-slate-500">Loading...</div>';
         button.disabled = true;
@@ -1052,19 +1138,22 @@ document.addEventListener('DOMContentLoaded', () => {
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = ""; // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+            const apiKey = ""; // API key is automatically provided by Canvas runtime
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
             const result = await response.json();
+
+            // Check if the response contains valid content
             if (result.candidates && result.candidates.length > 0 &&
                 result.candidates[0].content && result.candidates[0].content.parts &&
                 result.candidates[0].content.parts.length > 0) {
                 const text = result.candidates[0].content.parts[0].text;
-                outputDiv.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`; // Display the response
+                outputDiv.innerHTML = `<p>${text.replace(/\n/g, '<br>')}</p>`; // Display the response, preserving newlines
             } else {
                 outputDiv.innerHTML = '<p class="text-red-500">Error: Could not get a response from the AI.</p>';
             }
@@ -1072,11 +1161,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error calling Gemini API:", error);
             outputDiv.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
         } finally {
-            button.disabled = false;
+            button.disabled = false; // Re-enable button
         }
     }
 
+    // Event listener for "Get Cocktail Ideas" button
     document.getElementById('get-cocktail-ideas-btn').addEventListener('click', () => {
+        // Format existing cocktail recipes for the prompt
         const currentCocktails = Object.keys(state.recipes).map(name => {
             const ingredients = state.recipes[name].map(ing => `${ing.qty}${ing.unit} ${ing.item}`).join(', ');
             return `${name} (${ingredients})`;
@@ -1086,7 +1177,9 @@ document.addEventListener('DOMContentLoaded', () => {
         callGeminiAPI(prompt, 'cocktailIdeas');
     });
 
+    // Event listener for "Get Shopping Tips" button
     document.getElementById('get-shopping-tips-btn').addEventListener('click', () => {
+        // Format the current shopping list for the prompt
         const shoppingListText = Object.entries(currentShoppingList)
             .map(([item, data]) => `${item}: ${data.amount.toFixed(2)} ${data.unit}`)
             .join('; ');
@@ -1105,12 +1198,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const outputDiv = document.getElementById('custom-cocktail-output');
             const button = document.getElementById('calculateCustomCocktailBtn');
 
+            // Input validation
             if (!selectedCocktailName || isNaN(customGuestCount) || customGuestCount <= 0 || isNaN(customDrinksPerGuest) || customDrinksPerGuest <= 0) {
                 outputDiv.classList.remove('hidden');
                 outputDiv.innerHTML = '<p class="text-red-500">Please select a cocktail and enter valid guest and drink counts.</p>';
                 return;
             }
 
+            // Show loading state
             outputDiv.classList.remove('hidden');
             outputDiv.innerHTML = '<div class="text-center text-slate-500">Calculating...</div>';
             button.disabled = true;
@@ -1125,6 +1220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
+                // Calculate ingredients based on total servings
                 cocktailRecipe.forEach(ingredient => {
                     let amount = ingredient.qty * totalServings;
                     let unit = ingredient.unit;
@@ -1132,15 +1228,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     let purchaseUnits = 0;
                     let purchaseUnitName = '';
 
-                    // Convert units for display and purchase units
+                    // Convert units for display and determine purchase units
                     if (unit === 'ml') {
-                        amount /= 1000; // to Liters
+                        amount /= 1000; // Convert to Liters
                         displayUnit = 'L';
                         const bottleSize = (state.servingsPerBottle[ingredient.item]?.size || 1000) / 1000; // in Liters
                         purchaseUnits = Math.ceil(amount / bottleSize);
                         purchaseUnitName = `${purchaseUnits} x ${bottleSize * 1000}ml`;
                     } else if (unit === 'g') {
-                        amount /= 1000; // to kg
+                        amount /= 1000; // Convert to kg
                         displayUnit = 'kg';
                         purchaseUnits = Math.ceil(amount); // Assuming 1kg bags for sugar, etc.
                         purchaseUnitName = `${purchaseUnits} kg`;
@@ -1163,6 +1259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                 });
 
+                // Display calculated ingredients
                 let resultHtml = `<h4 class="font-bold mb-2">Ingredients for ${selectedCocktailName} (${totalServings.toFixed(0)} servings):</h4><ul>`;
                 Object.entries(calculatedIngredients).forEach(([item, data]) => {
                     resultHtml += `<li><strong>${item}:</strong> ${data.totalAmount} ${data.displayUnit} (Purchase: ${data.purchaseUnitName})</li>`;
@@ -1174,13 +1271,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Error calculating custom cocktail:", error);
                 outputDiv.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
             } finally {
-                button.disabled = false;
+                button.disabled = false; // Re-enable button
             }
         });
     }
 
 
-    // Initial load
+    // Initial load of all UI elements and calculations when the DOM is ready
     renderAll();
 });
 </script>
