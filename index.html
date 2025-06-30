@@ -151,8 +151,8 @@
                         <h3 class="text-xl font-semibold mb-4 text-stone-700">Core Assumptions</h3>
                          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label for="consumption-rate" class="block text-sm font-medium text-stone-600">Drinks per Person per Hour</label>
-                                <input type="number" id="consumption-rate" value="1.0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
+                                <label for="consumption-rate-slider" class="block text-sm font-medium text-stone-600">Drinks per Person per Hour (<span id="consumption-rate-value-display">0.5</span>)</label>
+                                <input type="range" id="consumption-rate-slider" min="0" max="2" step="0.1" value="0.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
                             </div>
                             <div>
                                 <label for="ice-rate" class="block text-sm font-medium text-stone-600">Ice per Guest per 24h (grams)</label>
@@ -160,7 +160,7 @@
                             </div>
                              <div>
                                 <label for="additional-bucket-ice" class="block text-sm font-medium text-stone-600">Additional Ice for Buckets (kg)</label>
-                                <input type="number" id="additional-bucket-ice" step="0.1" value="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
+                                <input type="number" id="additional-bucket-ice" step="0.1" value="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
                             </div>
                         </div>
                         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -171,6 +171,12 @@
                             <div>
                                 <label for="non-alcoholic-toast-guests" class="block text-sm font-medium text-stone-600">Non-Alcoholic Toast Guests</label>
                                 <input type="number" id="non-alcoholic-toast-guests" value="7" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
+                            </div>
+                        </div>
+                        <div class="mt-4 grid grid-cols-1">
+                             <div>
+                                <label for="hydration-ml-per-8-hours" class="block text-sm font-medium text-stone-600">Hydration (ml per 8 hours per guest)</label>
+                                <input type="number" id="hydration-ml-per-8-hours" value="1000" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
                             </div>
                         </div>
                     </div>
@@ -220,13 +226,22 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- New bar chart for Estimated Drinks by Category -->
+                    <div class="bg-white p-6 rounded-lg border">
+                        <h3 class="text-xl font-semibold mb-4 text-center text-stone-700">Estimated Drinks by Category</h3>
+                        <div class="chart-container">
+                            <canvas id="overallDrinksChart"></canvas>
+                        </div>
+                    </div>
                     <div class="bg-white p-6 rounded-lg border">
                          <h3 class="text-xl font-semibold mb-4 text-center text-stone-700">Drink Category Breakdown</h3>
                         <div class="chart-container">
                             <canvas id="consumptionChart"></canvas>
                         </div>
                     </div>
-                     <div class="bg-white p-6 rounded-lg border">
+                </div>
+                <div class="grid grid-cols-1 mb-8">
+                    <div class="bg-white p-6 rounded-lg border">
                          <h3 class="text-xl font-semibold mb-4 text-center text-stone-700">Cocktail Servings Forecast</h3>
                         <div class="chart-container">
                             <canvas id="cocktailChart"></canvas>
@@ -363,12 +378,12 @@
                 { id: 3, name: 'Saturday Party', start: 17, end: 26, duration: 9 },
             ],
             assumptions: {
-                consumptionRate: 1.0,
+                consumptionRate: 0.5, // Changed to 0.5
                 iceRate: 680,
-                additionalBucketIceKg: 0, 
+                additionalBucketIceKg: 5, // Changed to 5
                 alcoholicToastGuests: 21, 
                 nonAlcoholicToastGuests: 7,
-                hydrationMlPer8Hours: 1000 
+                hydrationMlPer8Hours: 1000 // New hydration assumption
             },
             servings: {
                 'Prosecco': { vol: 750, serv: 5, category: 'Wine' },
@@ -384,7 +399,7 @@
                 'Prosecco without alcohol': { vol: 750, serv: 5, category: 'Non-Alcoholic' },
                 'Elderflower Liqueur': { vol: 700, serv: 35, category: 'Liqueur' },
                 'Tonic Water': { vol: 1000, serv: 5, category: 'Mixer' },
-                'Water': { vol: 1000, serv: 1, category: 'Hydration' }
+                'Water': { vol: 1000, serv: 1, category: 'Hydration' } // Add water serving
             },
             recipes: {
                 'Mojito': [
@@ -415,62 +430,63 @@
             preferences: {
                 // Initial preferences are set directly in appData for persistence
                 nonDrinkers: {
-                    'Non-alcoholic beer': 50,
-                    'Prosecco without alcohol': 50
+                    'Non-alcoholic beer': 60, // Changed to 60
+                    'Prosecco without alcohol': 40 // Changed to 40
                 },
                 hydration: { 
-                    'Water': 25,
-                    'Coca Cola': 25,
-                    'Ginger Ale': 25,
-                    'Soda': 25
+                    'Water': 30, // Changed to 30
+                    'Coca Cola': 30, // Changed to 30
+                    'Ginger Ale': 20, // Changed to 20
+                    'Soda': 20 // Changed to 20
                 },
                 1: { // Friday Reception
                     women: {
-                        'Prosecco': 50,
-                        'White wine': 10,
-                        'Mojito': 10,
-                        'Aperol Spritz': 10,
-                        'Hugo': 10,
-                        'Beer': 10
+                        'Prosecco': 25, // Changed to 25
+                        'White wine': 0, // Changed to 0
+                        'Mojito': 25, // Changed to 25
+                        'Aperol Spritz': 25, // Changed to 25
+                        'Hugo': 25, // Changed to 25
+                        'Beer': 0 // Changed to 0
                     },
                     men: {
-                        'White wine': 13.33,
-                        'Whiskey and Cola': 60,
-                        'Mojito': 13.33,
-                        'Beer': 13.33
+                        'White wine': 0, // Changed to 0
+                        'Whiskey and Cola': 70, // Changed to 70
+                        'Mojito': 15, // Changed to 15
+                        'Beer': 15, // Changed to 15
+                        'Hugo': 0 // Changed to 0
                     }
                 },
                 2: { // Saturday Grill
                     women: {
-                        'Beer': 60,
-                        'Mojito': 10,
-                        'Aperol Spritz': 10,
-                        'Hugo': 10,
-                        'Whiskey and Cola': 10
+                        'Beer': 37, // Changed to 37
+                        'Mojito': 33, // Changed to 33
+                        'Aperol Spritz': 21, // Changed to 21
+                        'Hugo': 9, // Changed to 9
+                        'Whiskey and Cola': 0 // Changed to 0
                     },
                     men: {
-                        'Beer': 70,
-                        'Mojito': 7.5,
-                        'Aperol Spritz': 7.5,
-                        'Hugo': 7.5,
-                        'Whiskey and Cola': 7.5
+                        'Beer': 70, // Changed to 70
+                        'Mojito': 20, // Changed to 20
+                        'Aperol Spritz': 0, // Changed to 0
+                        'Hugo': 0, // Changed to 0
+                        'Whiskey and Cola': 10 // Changed to 10
                     }
                 },
                 3: { // Saturday Party
                     women: {
-                        'Prosecco': 50,
-                        'White wine': 10,
-                        'Mojito': 10,
-                        'Aperol Spritz': 10,
-                        'Hugo': 10,
-                        'Beer': 10
+                        'Prosecco': 35, // Changed to 35
+                        'White wine': 0, // Changed to 0
+                        'Mojito': 20, // Changed to 20
+                        'Aperol Spritz': 25, // Changed to 25
+                        'Hugo': 10, // Changed to 10
+                        'Beer': 10 // Changed to 10
                     },
                     men: {
-                        'White wine': 10, 
-                        'Whiskey and Cola': 55, 
-                        'Mojito': 10, 
-                        'Beer': 10, 
-                        'Hugo': 15 
+                        'White wine': 5, // Changed to 5
+                        'Whiskey and Cola': 60, // Changed to 60
+                        'Mojito': 15, // Changed to 15
+                        'Beer': 15, // Changed to 15
+                        'Hugo': 5 // Changed to 5
                     }
                 }
             }
@@ -484,7 +500,7 @@
             grill: ['Beer', 'Mojito', 'Aperol Spritz', 'Hugo', 'Whiskey and Cola'] 
         };
 
-        let consumptionChart, cocktailChart;
+        let consumptionChart, cocktailChart, overallDrinksChart; // Added overallDrinksChart
 
         // Fixed cocktail forecast from user query
         const fixedCocktailForecast = {
@@ -535,7 +551,7 @@
                         <button class="remove-segment-btn absolute top-2 right-2 text-red-500 hover:text-red-700">&times;</button>
                         <input type="text" value="${event.name}" class="event-name-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
                         
-                        <div class="time-range-slider-container relative w-full h-8 bg-gray-200 rounded-lg opacity: 0.8; cursor-pointer my-2" data-event-id="${event.id}">
+                        <div class="time-range-slider-container relative w-full h-8 bg-gray-200 opacity: 0.8; cursor-pointer my-2" data-event-id="${event.id}">
                             <div class="time-range-track-markers">
                                 ${markerSpans}
                             </div>
@@ -698,7 +714,7 @@
             Object.entries(fixedCocktailForecast).forEach(([cocktailName, numServings]) => {
                 if (numServings > 0) {
                     totalCocktailsServed += numServings;
-                    cocktailServingsChartData[cocktailName] = (cocktailServingsChartData[cocktailName] || 0) + numServings; 
+                    cocktailServingsChartData[cocktailName] = (cocktailServingsChartData[cocktailName] || 0) + numServings;
 
                     if (recipes[cocktailName]) {
                         recipes[cocktailName].forEach(ingredient => {
@@ -782,6 +798,21 @@
                 }
             });
 
+            // --- Hydration Calculation ---
+            const totalGuests = guests.womenDrinkers + guests.womenNondrinkers + guests.menDrinkers + guests.menNondrinkers;
+            const totalEventHours = events.reduce((sum, e) => sum + e.duration, 0); // Correctly declared and used here
+            const mlHydrationPerGuestPer8Hours = assumptions.hydrationMlPer8Hours;
+            const totalHydrationMlNeeded = totalGuests * (totalEventHours / 8) * mlHydrationPerGuestPer8Hours;
+
+
+            Object.entries(preferences.hydration).forEach(([bev, perc]) => {
+                if (servings[bev]) {
+                    const qtyInMl = (perc / 100) * totalHydrationMlNeeded;
+                    addRawItem(bev, qtyInMl, 'ml', servings[bev]?.category || 'Unknown',
+                               { type: 'hydration', guests: totalGuests, event_hours: totalEventHours, ml_per_8_hours_per_guest: mlHydrationPerGuestPer8Hours, percentage: perc, total_qty_from_source: qtyInMl });
+                }
+            });
+            // --- End Hydration Calculation ---
 
             const alcoholicToastGuests = assumptions.alcoholicToastGuests || 0;
             const proseccoServingMl = appData.servings['Prosecco'].vol / appData.servings['Prosecco'].serv; 
@@ -843,11 +874,33 @@
             document.getElementById('total-event-hours-display').textContent = currentTotalEventHours.toFixed(1);
 
             const totalGuestCount = guests.womenDrinkers + guests.womenNondrinkers + guests.menDrinkers + guests.menNondrinkers;
-            const totalDrinkHoursCombined = Object.values(totalDrinksHours).reduce((a,b) => a+b, 0); 
-            const iceKg = (assumptions.iceRate / 24 * totalGuestCount * currentTotalEventHours / 1000) * 1.20 + (assumptions.additionalBucketIceKg || 0); 
+            
+            // Calculate total estimated drinks (servings) for the overall display and chart
+            let totalEstimatedDrinksForDisplay = 0;
+            const categoryServingsForOverallChart = { 'Beer': 0, 'Wine': 0, 'Cocktail': 0, 'Spirit': 0, 'Non-Alcoholic': 0, 'Liqueur': 0, 'Mixer': 0, 'Hydration': 0 };
+
+            Object.entries(rawShoppingList).forEach(([item, data]) => {
+                if (recipes[item]) { // It's a cocktail
+                    const servings = data.totalQty; // data.totalQty is the number of cocktails
+                    totalEstimatedDrinksForDisplay += servings;
+                    categoryServingsForOverallChart['Cocktail'] += servings;
+                } else if (servings[item] && servings[item].vol !== 'N/A' && servings[item].serv !== 'N/A') {
+                    // Liquid drinks (direct consumption or hydration)
+                    const servingsFromVolume = data.totalQty / (servings[item].vol / servings[item].serv);
+                    totalEstimatedDrinksForDisplay += servingsFromVolume;
+                    if (categoryServingsForOverallChart[servings[item].category] !== undefined) {
+                         categoryServingsForOverallChart[servings[item].category] += servingsFromVolume;
+                    } else { // Fallback if category not found (shouldn't happen with defined data)
+                         categoryServingsForOverallChart['Mixer'] += servingsFromVolume; 
+                    }
+                }
+                // Discrete items like Limes, Mint, Sugar are not counted as "drinks" for this metric
+            });
+            document.getElementById('total-drinks-result').textContent = Math.round(totalEstimatedDrinksForDisplay);
+
+            const iceKg = (assumptions.iceRate / 24 * totalGuestCount * totalEventHours / 1000) * 1.20 + (assumptions.additionalBucketIceKg || 0); 
 
             document.getElementById('total-guests-result').textContent = totalGuestCount;
-            document.getElementById('total-drinks-result').textContent = Math.round(totalDrinkHoursCombined);
             document.getElementById('total-cocktails-result').textContent = Math.round(totalCocktailsServed);
             document.getElementById('total-ice-result').textContent = `${iceKg.toFixed(1)} kg`;
             
@@ -915,6 +968,7 @@
 
             updateConsumptionChart(Object.keys(categoryChartDataForDisplay), Object.values(categoryChartDataForDisplay));
             updateCocktailChart(Object.keys(cocktailServingsChartData), Object.values(cocktailServingsChartData));
+            updateOverallDrinksChart(Object.keys(categoryServingsForOverallChart), Object.values(categoryServingsForOverallChart)); // Update the new bar chart
         }
 
         function updateConsumptionChart(labels, data) {
@@ -964,6 +1018,73 @@
                 }
              });
         }
+
+        // New function to update the overall drinks bar chart
+        function updateOverallDrinksChart(labels, data) {
+            const ctx = document.getElementById('overallDrinksChart').getContext('2d');
+            const chartData = {
+                labels: labels.filter((_, i) => data[i] > 0),
+                datasets: [{
+                    label: 'Estimated Servings',
+                    data: data.filter(d => d > 0),
+                    backgroundColor: [
+                        '#f59e0b', // Beer (Amber)
+                        '#3b82f6', // Wine (Blue)
+                        '#8b5cf6', // Cocktail (Purple)
+                        '#ec4899', // Spirit (Pink)
+                        '#10b981', // Non-Alcoholic (Green)
+                        '#6b7280', // Liqueur (Gray)
+                        '#c084fc', // Mixer (Light Purple)
+                        '#4ade80'  // Hydration (Light Green)
+                    ],
+                    borderColor: '#ffffff',
+                    borderWidth: 1,
+                }]
+            };
+            if (overallDrinksChart) overallDrinksChart.destroy();
+            overallDrinksChart = new Chart(ctx, {
+                type: 'bar', // Bar chart for overall consumption
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }, // Hide legend for bar chart if labels are on X axis
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += Math.round(context.parsed.y) + ' servings';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Beverage Category'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Estimated Servings'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
 
         function renderBeverageAssumptions() {
             const tbody = document.getElementById('beverage-assumptions-body');
@@ -1080,276 +1201,28 @@
             });
         }
 
-        // Function to generate and download the report
-        function generateAndDownloadReport() {
-            let reportContent = `# Wedding Beverage Planning Report\n\n`;
-            reportContent += `Generated: ${new Date().toLocaleString()}\n\n`;
-
-            // 1. Event & Guest Details
-            reportContent += `## Event & Guest Details\n\n`;
-            reportContent += `### Guest Demographics\n`;
-            reportContent += `| Category             | Count |\n`;
-            reportContent += `| :------------------- | :---- |\n`;
-            reportContent += `| Women (Alcohol Drinkers) | ${document.getElementById('women-drinkers').value} |\n`;
-            reportContent += `| Women (Non-Drinkers)   | ${document.getElementById('women-nondrinkers').value} |\n`;
-            reportContent += `| Men (Alcohol Drinkers)   | ${document.getElementById('men-drinkers').value} |\n`;
-            reportContent += `| Men (Non-Drinkers)     | ${document.getElementById('men-nondrinkers').value} |\n`;
-            reportContent += `| **Total Guests** | ${document.getElementById('total-guests-result').textContent} |\n\n`;
-
-            reportContent += `### Event Timeline\n`;
-            reportContent += `| Event Name        | Start Time      | End Time        | Duration (Hours) |\n`;
-            reportContent += `| :---------------- | :-------------- | :-------------- | :--------------- |\n`;
-            appData.events.forEach(event => {
-                reportContent += `| ${event.name} | ${formatTime(event.start)} | ${formatTime(event.end)} | ${event.duration.toFixed(1)} |\n`;
-            });
-            reportContent += `| **Total Event Hours** | | | **${document.getElementById('total-event-hours-display').textContent}** |\n\n`;
-
-            reportContent += `### Core Assumptions\n`;
-            reportContent += `| Assumption                 | Value            |\n`;
-            reportContent += `| :------------------------- | :--------------- |\n`;
-            reportContent += `| Drinks per Person per Hour | ${document.getElementById('consumption-rate').value} |\n`;
-            reportContent += `| Ice per Guest per 24h (grams)| ${document.getElementById('ice-rate').value} |\n`;
-            reportContent += `| Additional Ice for Buckets (kg)| ${document.getElementById('additional-bucket-ice').value} |\n`;
-            reportContent += `| Alcoholic Toast Guests     | ${document.getElementById('alcoholic-toast-guests').value} |\n`;
-            reportContent += `| Non-Alcoholic Toast Guests | ${document.getElementById('non-alcoholic-toast-guests').value} |\n`;
-            reportContent += `| Hydration (ml/8 hours/guest)| ${appData.assumptions.hydrationMlPer8Hours} |\n\n`;
-
-            // 2. Preferences
-            reportContent += `## Preferences\n\n`;
-            reportContent += `### Hydration Preferences\n`;
-            reportContent += `| Beverage    | Preference (%) |\n`;
-            reportContent += `| :---------- | :------------- |\n`;
-            Object.entries(appData.preferences.hydration).forEach(([bev, perc]) => {
-                reportContent += `| ${bev} | ${Math.round(perc)} |\n`;
-            });
-            reportContent += `\n`;
-
-            appData.events.forEach(event => {
-                const prefKey = event.id;
-                reportContent += `### ${event.name} Preferences\n`;
-                
-                reportContent += `**Women's Preferences**\n`;
-                reportContent += `| Beverage    | Preference (%) |\n`;
-                reportContent += `| :---------- | :------------- |\n`;
-                Object.entries(appData.preferences[prefKey].women).forEach(([bev, perc]) => {
-                    reportContent += `| ${bev} | ${Math.round(perc)} |\n`;
-                });
-                reportContent += `\n`;
-
-                reportContent += `**Men's Preferences**\n`;
-                reportContent += `| Beverage    | Preference (%) |\n`;
-                reportContent += `| :---------- | :------------- |\n`;
-                Object.entries(appData.preferences[prefKey].men).forEach(([bev, perc]) => {
-                    reportContent += `| ${bev} | ${Math.round(perc)} |\n`;
-                });
-                reportContent += `\n`;
-            });
-
-            reportContent += `### Non-Drinker Preferences (All Events)\n`;
-            reportContent += `| Beverage    | Preference (%) |\n`;
-            reportContent += `| :---------- | :------------- |\n`;
-            Object.entries(appData.preferences.nonDrinkers).forEach(([bev, perc]) => {
-                reportContent += `| ${bev} | ${Math.round(perc)} |\n`;
-            });
-            reportContent += `\n`;
-
-
-            // 3. Results Dashboard
-            reportContent += `## Results Dashboard\n\n`;
-            reportContent += `| Metric            | Value       |\n`;
-            reportContent += `| :---------------- | :---------- |\n`;
-            reportContent += `| Total Guests      | ${document.getElementById('total-guests-result').textContent} |\n`;
-            reportContent += `| Total Drinks (Est.) | ${document.getElementById('total-drinks-result').textContent} |\n`;
-            reportContent += `| Total Cocktails   | ${document.getElementById('total-cocktails-result').textContent} |\n`;
-            reportContent += `| Ice Needed        | ${document.getElementById('total-ice-result').textContent} |\n\n`;
-
-            // 4. Complete Shopping List
-            reportContent += `## Complete Shopping List\n\n`;
-            reportContent += `| Item | Category | Quantity | Unit |\n`;
-            reportContent += `| :--- | :------- | :------- | :--- |\n`;
-            
-            // Get the data directly from the last calculation
-            const calculatedShoppingList = window.finalCalculatedShoppingList; 
-
-            calculatedShoppingList.sort((a,b) => a.category.localeCompare(b.category) || a.item.localeCompare(b.item)).forEach(item => {
-                reportContent += `| ${item.item} | ${item.category} | ${item.qty} | ${item.unit} |\n`;
-                reportContent += `|    | **Breakdown:** |\n`;
-                item.details.forEach(detail => {
-                    let detailText = '';
-                    const drinkerHourNote = "Note: A 'drinker hour' represents one guest consuming drinks for one hour, based on the 'Drinks per Person per Hour' assumption. For example, 10 drinkers for a 9-hour event = 90 drinker hours.";
-                    if (detail.type === 'cocktail_ingredient' || detail.type === 'cocktail_ingredient_from_pref') {
-                        detailText = `From ${detail.cocktail}: ${detail.servings.toFixed(1)} servings * ${detail.qty_per_serving.toFixed(1)}${detail.unit_per_serving} = ${detail.total_qty_from_source.toFixed(1)}${detail.unit_per_serving}`;
-                        if (detail.type === 'cocktail_ingredient_from_pref') {
-                            detailText += ` (from ${detail.gender} preferences for ${detail.event}, based on ${detail.drinker_hours_involved.toFixed(1)} drinker hours)`;
-                        }
-                    } else if (detail.type === 'direct_consumption') {
-                        const totalRawQty = detail.drinker_hours * detail.percentage / 100 * detail.qty_per_drink;
-                        detailText = `From direct consumption (${detail.gender} for ${detail.event}): ${(detail.percentage).toFixed(1)}% of ${detail.drinker_hours.toFixed(1)} drinker hours (${detail.qty_per_drink.toFixed(1)}ml/drink) = ${totalRawQty.toFixed(1)}ml`;
-                    } else if (detail.type === 'toast') {
-                        detailText = `From Toast (${detail.guests} guests): ${detail.guests} guests * ${detail.ml_per_person.toFixed(1)}ml/serving = ${detail.total_qty_from_source.toFixed(1)}ml`;
-                    } else if (detail.type === 'hydration') { 
-                        detailText = `From Overall Hydration: ${detail.percentage.toFixed(1)}% of total ${detail.event_hours.toFixed(1)} event hours for ${detail.guests} guests (${detail.ml_per_8_hours_per_guest.toFixed(1)}ml/8h/guest) = ${detail.total_qty_from_source.toFixed(1)}ml`;
-                    }
-                    if (detail.note) { 
-                        detailText += `<br>    * ${drinkerHourNote}`; 
-                    }
-                    reportContent += `|    | - ${detailText} |\n`;
-                });
-                reportContent += `|    | **Total Raw Quantity:** ${item.totalRawVolume.toFixed(1)} ${item.rawUnit} |\n`;
-                reportContent += `|    | **Final Calculation:** CEILING(${item.totalRawVolume.toFixed(1)} ${item.rawUnit} / ${item.conversionFactor.toFixed(1)} ${item.rawUnit}/${item.unit}) = ${item.qty} ${item.unit} |\n`;
-            });
-            reportContent += `\n`;
-
-
-            // 5. Beverage Assumptions (Table)
-            reportContent += `## Beverage Assumptions\n\n`;
-            reportContent += `| Beverage     | Volume per Unit (ml) | Servings per Unit | Category |\n`;
-            reportContent += `| :----------- | :------------------- | :---------------- | :------- |\n`;
-            Object.entries(appData.servings).sort(([aKey], [bKey]) => aKey.localeCompare(bKey)).forEach(([bevName, data]) => {
-                reportContent += `| ${bevName} | ${data.vol !== 'N/A' ? `${data.vol} ml` : 'N/A'} | ${data.serv !== 'N/A' ? data.serv : 'N/A'} | ${data.category} |\n`;
-            });
-            reportContent += `\n`;
-
-            // 6. Cocktail Recipes (Table)
-            reportContent += `## Cocktail Recipes\n\n`;
-            reportContent += `| Cocktail     | Ingredient | Quantity per Serving | Unit |\n`;
-            reportContent += `| :----------- | :--------- | :------------------- | :--- |\n`;
-            Object.keys(appData.recipes).sort().forEach(cocktailName => {
-                appData.recipes[cocktailName].forEach((ingredient, index) => {
-                    reportContent += `| ${index === 0 ? cocktailName : ''} | ${ingredient.item} | ${ingredient.qty.toFixed(1)} | ${ingredient.unit} |\n`;
-                });
-            });
-            reportContent += `\n`;
-
-
-            const blob = new Blob([reportContent], { type: 'text/markdown' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'wedding_beverage_report.md';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // Make finalShoppingList globally accessible for the report generation
-        // This variable will be updated each time calculateAndRenderResults is called.
-        window.finalCalculatedShoppingList = [];
-
-        // Function to save current state as new default values in the code
-        function saveCurrentAsDefault() {
-            // Capture current guest data
-            const currentGuests = {
-                womenDrinkers: parseInt(document.getElementById('women-drinkers').value) || 0,
-                womenNondrinkers: parseInt(document.getElementById('women-nondrinkers').value) || 0,
-                menDrinkers: parseInt(document.getElementById('men-drinkers').value) || 0,
-                menNondrinkers: parseInt(document.getElementById('men-nondrinkers').value) || 0,
-            };
-
-            // Capture current event data
-            const currentEvents = appData.events.map(event => {
-                const element = document.querySelector(`.event-segment-item[data-id="${event.id}"]`);
-                return {
-                    id: event.id,
-                    name: element.querySelector('.event-name-input').value,
-                    start: event.start, // These are updated directly in appData.events by slider logic
-                    end: event.end,     // so no need to read from input fields here.
-                    duration: event.duration
-                };
-            });
-
-            // Capture current assumptions
-            const currentAssumptions = {
-                consumptionRate: parseFloat(document.getElementById('consumption-rate').value) || 0,
-                iceRate: parseInt(document.getElementById('ice-rate').value) || 0,
-                additionalBucketIceKg: parseFloat(document.getElementById('additional-bucket-ice').value) || 0,
-                alcoholicToastGuests: parseInt(document.getElementById('alcoholic-toast-guests').value) || 0,
-                nonAlcoholicToastGuests: parseInt(document.getElementById('non-alcoholic-toast-guests').value) || 0,
-                hydrationMlPer8Hours: appData.assumptions.hydrationMlPer8Hours // This is static, not from input
-            };
-
-            // Capture current preferences (hydration, nonDrinkers, and event-specific)
-            const currentPreferences = {};
-            
-            // Hydration preferences
-            currentPreferences.hydration = {};
-            Array.from(document.querySelectorAll('#hydration-preferences-container [data-event-key="hydration"] .preference-slider')).forEach(slider => {
-                currentPreferences.hydration[slider.dataset.bev] = parseFloat(slider.value);
-            });
-
-            // Non-drinker preferences
-            currentPreferences.nonDrinkers = {};
-            Array.from(document.querySelectorAll('#preferences-container [data-event-key="nonDrinkers"] .preference-slider')).forEach(slider => {
-                 currentPreferences.nonDrinkers[slider.dataset.bev] = parseFloat(slider.value);
-            });
-
-            // Event-specific preferences
-            appData.events.forEach(event => {
-                currentPreferences[event.id] = {};
-                const eventContainer = document.querySelector(`#preferences-container [data-event-key="${event.id}"]`);
-                if (eventContainer) {
-                    const womenSliders = Array.from(eventContainer.querySelectorAll('[data-group-key="women"] .preference-slider'));
-                    if (womenSliders.length > 0) {
-                        currentPreferences[event.id].women = {};
-                        womenSliders.forEach(slider => {
-                            currentPreferences[event.id].women[slider.dataset.bev] = parseFloat(slider.value);
-                        });
-                    }
-
-                    const menSliders = Array.from(eventContainer.querySelectorAll('[data-group-key="men"] .preference-slider'));
-                    if (menSliders.length > 0) {
-                        currentPreferences[event.id].men = {};
-                        menSliders.forEach(slider => {
-                            currentPreferences[event.id].men[slider.dataset.bev] = parseFloat(slider.value);
-                        });
-                    }
-                }
-            });
-
-            let newAppDataString = JSON.stringify({
-                guests: currentGuests,
-                events: currentEvents,
-                assumptions: currentAssumptions,
-                servings: appData.servings, // Keep servings static
-                recipes: appData.recipes,   // Keep recipes static
-                preferences: currentPreferences
-            }, null, 4); // Pretty print JSON
-
-            // Construct the updated HTML string for download
-            const originalHtml = document.documentElement.outerHTML;
-            const scriptTagStart = originalHtml.indexOf('const appData = {');
-            const scriptTagEnd = originalHtml.indexOf('};', scriptTagStart) + 1; // find the end of appData object
-
-            // Create a new HTML content with updated appData
-            const startHtml = originalHtml.substring(0, scriptTagStart);
-            const endHtml = originalHtml.substring(scriptTagEnd);
-
-            const finalHtmlContent = `${startHtml}const appData = ${newAppDataString};\n${endHtml}`;
-
-            const blob = new Blob([finalHtmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'wedding_calculator_default.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
 
         function bindEventListeners() {
-            document.getElementById('event-setup-section').addEventListener('change', () => {
+            // Updated listener for consumption rate slider
+            document.getElementById('consumption-rate-slider').addEventListener('input', (e) => {
+                appData.assumptions.consumptionRate = parseFloat(e.target.value);
+                document.getElementById('consumption-rate-value-display').textContent = appData.assumptions.consumptionRate.toFixed(1);
+                calculateAndRenderResults();
+            });
+
+            document.getElementById('event-setup-section').addEventListener('change', (e) => {
+                 // Check if the change event came from the consumption-rate-slider itself, as it's handled above
+                 if (e.target.id === 'consumption-rate-slider') return;
+
                  appData.guests.womenDrinkers = parseInt(document.getElementById('women-drinkers').value) || 0;
                  appData.guests.womenNondrinkers = parseInt(document.getElementById('women-nondrinkers').value) || 0;
                  appData.guests.menDrinkers = parseInt(document.getElementById('men-drinkers').value) || 0;
                  appData.guests.menNondrinkers = parseInt(document.getElementById('men-nondrinkers').value) || 0;
-                 appData.assumptions.consumptionRate = parseFloat(document.getElementById('consumption-rate').value) || 0;
                  appData.assumptions.iceRate = parseInt(document.getElementById('ice-rate').value) || 0;
                  appData.assumptions.additionalBucketIceKg = parseFloat(document.getElementById('additional-bucket-ice').value) || 0; 
                  appData.assumptions.alcoholicToastGuests = parseInt(document.getElementById('alcoholic-toast-guests').value) || 0; 
                  appData.assumptions.nonAlcoholicToastGuests = parseInt(document.getElementById('non-alcoholic-toast-guests').value) || 0; 
+                 appData.assumptions.hydrationMlPer8Hours = parseInt(document.getElementById('hydration-ml-per-8-hours').value) || 0; // Updated to capture hydration ml per 8 hours
                  
                  document.querySelectorAll('.event-segment-item').forEach(itemEl => {
                      const id = parseInt(itemEl.dataset.id);
@@ -1447,152 +1320,6 @@
             document.getElementById('calc-people').addEventListener('input', calculateCustomCocktailIngredients);
             document.getElementById('calc-drinks-per-person').addEventListener('input', calculateCustomCocktailIngredients);
             document.getElementById('calc-cocktail-select').addEventListener('change', calculateCustomCocktailIngredients);
-
-            // Download Report Button Listener - REMOVED
-            // Save Defaults Button Listener - REMOVED
-
-
-            let isDragging = false;
-            let activeHandle = null; 
-            let dragStartX = 0;
-            let initialStart = 0;
-            let initialEnd = 0;
-            let currentEventId = null;
-
-            document.getElementById('event-segments-container').addEventListener('mousedown', (e) => {
-                const handle = e.target.closest('.handle');
-                const timeRangeBar = e.target.closest('.time-range-bar');
-
-                if (handle || timeRangeBar) {
-                    isDragging = true;
-                    e.preventDefault(); 
-                    
-                    const sliderContainer = e.target.closest('.time-range-slider-container');
-                    const eventItem = e.target.closest('.event-segment-item');
-                    currentEventId = parseInt(eventItem.dataset.id);
-                    const eventIndex = appData.events.findIndex(ev => ev.id === currentEventId);
-                    
-                    if (eventIndex === -1) {
-                        isDragging = false;
-                        return;
-                    }
-
-                    const eventData = appData.events[eventIndex];
-                    initialStart = eventData.start;
-                    initialEnd = eventData.end;
-                    dragStartX = e.clientX;
-
-                    if (handle && handle.classList.contains('left-handle')) {
-                        activeHandle = 'left';
-                    } else if (handle && handle.classList.contains('right-handle')) {
-                        activeHandle = 'right';
-                    } else if (timeRangeBar) { 
-                        activeHandle = 'center';
-                        timeRangeBar.classList.add('dragging');
-                    }
-                }
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-
-                const sliderContainer = document.querySelector(`.time-range-slider-container[data-event-id="${currentEventId}"]`);
-                if (!sliderContainer) return; 
-
-                const containerRect = sliderContainer.getBoundingClientRect();
-                const dx = e.clientX - dragStartX;
-                const pixelsPerHour = containerRect.width / maxSliderHours;
-                const hoursDelta = dx / pixelsPerHour;
-                const snapTolerance = 0.5;
-
-                const eventIndex = appData.events.findIndex(ev => ev.id === currentEventId);
-                if (eventIndex === -1) {
-                    isDragging = false;
-                    return;
-                }
-                const eventData = appData.events[eventIndex];
-                let newStart = initialStart;
-                let newEnd = initialEnd;
-
-                if (activeHandle === 'left') {
-                    newStart = initialStart + hoursDelta;
-                    newStart = Math.max(0, Math.min(newStart, newEnd - minEventDuration));
-                } else if (activeHandle === 'right') {
-                    newEnd = initialEnd + hoursDelta;
-                    newEnd = Math.min(maxSliderHours, Math.max(newEnd, newStart + minEventDuration));
-                } else if (activeHandle === 'center') {
-                    const newCalculatedStart = initialStart + hoursDelta;
-                    const newCalculatedEnd = initialEnd + hoursDelta;
-
-                    if (newCalculatedStart < 0) {
-                        newStart = 0;
-                        newEnd = eventData.duration;
-                    } else if (newCalculatedEnd > maxSliderHours) {
-                        newEnd = maxSliderHours;
-                        newStart = maxSliderHours - eventData.duration;
-                    } else {
-                        newStart = newCalculatedStart;
-                        newEnd = newCalculatedEnd;
-                    }
-                }
-
-                newStart = Math.round(newStart * 2) / 2;
-                newEnd = Math.round(newEnd * 2) / 2;
-
-                if (newEnd - newStart < minEventDuration) {
-                    if (activeHandle === 'left') newStart = newEnd - minEventDuration;
-                    else if (activeHandle === 'right') newEnd = newStart + minEventDuration;
-                    else if (activeHandle === 'center') {
-                         if (newStart < 0) { 
-                            newStart = 0;
-                            newEnd = minEventDuration;
-                         } else if (newEnd > maxSliderHours) { 
-                            newEnd = maxSliderHours;
-                            newStart = maxSliderHours - minEventDuration;
-                         } else { 
-                            newEnd = newStart + minEventDuration; 
-                         }
-                    }
-                }
-
-                newStart = Math.max(0, newStart);
-                newEnd = Math.min(maxSliderHours, newEnd);
-                if (newEnd - newStart < minEventDuration) { 
-                    if (newStart === 0) newEnd = minEventDuration;
-                    else if (newEnd === maxSliderHours) newStart = maxSliderHours - minEventDuration;
-                }
-
-                eventData.start = newStart;
-                eventData.end = newEnd;
-                eventData.duration = newEnd - newStart;
-
-                const timeRangeBar = sliderContainer.querySelector('.time-range-bar');
-                const startDisplay = sliderContainer.closest('.event-segment-item').querySelector('.start-display');
-                const endDisplay = sliderContainer.closest('.event-segment-item').querySelector('.end-display');
-                const durationDisplay = sliderContainer.closest('.event-segment-item').querySelector('.duration-display');
-
-                timeRangeBar.style.left = `${(eventData.start / maxSliderHours) * 100}%`;
-                timeRangeBar.style.width = `${(eventData.duration / maxSliderHours) * 100}%`;
-
-                startDisplay.textContent = formatTime(eventData.start);
-                endDisplay.textContent = formatTime(eventData.end);
-                durationDisplay.textContent = eventData.duration.toFixed(1);
-
-                updateTotalEventHoursDisplay();
-                calculateAndRenderResults(); 
-            });
-
-            document.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    activeHandle = null;
-                    const timeRangeBar = document.querySelector(`.time-range-bar.dragging`);
-                    if (timeRangeBar) {
-                        timeRangeBar.classList.remove('dragging');
-                    }
-                    calculateAndRenderResults(); 
-                }
-            });
         }
 
         function updateTotalEventHoursDisplay() {
