@@ -163,6 +163,38 @@
                         <h3 class="text-lg font-semibold border-b pb-2 mb-4">5. Beverage Preferences per Phase</h3>
                         <div id="phase-preferences" class="space-y-6"></div>
                     </div>
+
+                    <!-- Shots Calculator Section (Moved from Tab to Left Column) -->
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-semibold border-b pb-2 mb-4">6. Shots Calculator</h3>
+                        <p class="text-sm text-slate-500 mb-4">Estimate liquor, salt, and lime needed for shots rounds.</p>
+                        <div class="grid md:grid-cols-1 gap-6">
+                            <!-- Whiskey Shots -->
+                            <div class="p-3 border rounded-md bg-slate-50">
+                                <h4 class="font-bold text-md mb-2">Whiskey Shots</h4>
+                                <label class="block mb-2">
+                                    <span class="text-sm font-medium">Participants:</span>
+                                    <input type="number" id="whiskeyShotParticipants" value="6" min="0" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </label>
+                                <label class="block">
+                                    <span class="text-sm font-medium">Number of Rounds:</span>
+                                    <input type="number" id="whiskeyShotRounds" value="5" min="0" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </label>
+                            </div>
+                            <!-- Tequila Shots -->
+                            <div class="p-3 border rounded-md bg-slate-50">
+                                <h4 class="font-bold text-md mb-2">Tequila Shots</h4>
+                                <label class="block mb-2">
+                                    <span class="text-sm font-medium">Participants:</span>
+                                    <input type="number" id="tequilaShotParticipants" value="6" min="0" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </label>
+                                <label class="block">
+                                    <span class="text-sm font-medium">Number of Rounds:</span>
+                                    <input type="number" id="tequilaShotRounds" value="3" min="0" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </aside>
 
@@ -304,9 +336,9 @@ document.addEventListener('DOMContentLoaded', () => {
             { name: "Soda", percent: 20, color: '#64748b' }
         ],
         eventPhases: [
-            { id: 1, name: "Friday Reception", start: "17:00", end: "02:00" },
-            { id: 2, name: "Saturday Grill", start: "11:35", end: "17:00" },
-            { id: 3, name: "Saturday Party", start: "17:00", end: "02:00" },
+            { id: 1, name: "Friday Reception", start: "17:00", end: "02:00" }, // Removed consumptionMultiplier
+            { id: 2, name: "Saturday Grill", start: "11:35", end: "17:00" }, // Removed consumptionMultiplier
+            { id: 3, name: "Saturday Party", start: "17:00", end: "02:00" }, // Removed consumptionMultiplier
         ],
         beverages: {
             women: ["Prosecco", "White Wine", "Mojito", "Aperol Spritz", "Hugo", "Beer"],
@@ -356,10 +388,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 { item: "Coca Cola", qty: 100, unit: "ml" }
             ]
         },
+        shots: { // New section for shot calculations
+            whiskey: { participants: 6, rounds: 5 }, // Updated default values
+            tequila: { participants: 6, rounds: 3 } // Updated default values
+        },
         servingsPerBottle: {
             "Prosecco": { size: 750, servings: 5 },
             "Non-alcoholic Prosecco": { size: 750, servings: 5 },
-            "Whiskey": { size: 750, servings: 17 },
+            "Whiskey": { size: 750, servings: 15 }, // Updated for 50ml shots
+            "Tequila": { size: 750, servings: 15 }, // Updated for 50ml shots
             "Beer": { size: 500, servings: 1 },
             "Non-alcoholic beer": { size: 500, servings: 1 },
             "Aperol": { size: 1000, servings: 17 },
@@ -377,6 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
             "Non-alcoholic Prosecco": 29.99,
             "White Wine": 29.99,
             "Whiskey": 79.99, // 750ml
+            "Tequila": 89.99, // Example price for 750ml
             "Beer": 3.99, // 500ml
             "Non-alcoholic beer": 3.50,
             "Aperol": 69.99, // 1000ml
@@ -391,6 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
             "Oranges": 2.00, // unit
             "Mint": 4.99, // bunch (approx. 50 leaves)
             "Sugar": 5.99, // kg
+            "Salt": 4.00 // Example price per kg
         }
     };
 
@@ -410,6 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderHydrationPreferences();
         renderEventPhases();
         renderPhasePreferences();
+        renderShotInputs(); // Now called from here as it's part of the main input column
         populateCustomCocktailSelect(); // Populate custom cocktail dropdown
         renderFAQ(); // Render FAQ content
         updateAllCalculations();
@@ -481,6 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Renders the beverage preference sliders for each event phase and gender.
      * Adjusts other slider values to maintain a total of 100% within each group.
+     * Also includes the new consumption multiplier.
      */
     function renderPhasePreferences() {
         const container = document.getElementById('phase-preferences');
@@ -523,9 +564,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 </div>
+                <!-- Removed Consumption Multiplier (%) -->
             `;
             container.appendChild(div);
         });
+    }
+
+    /**
+     * Renders the shot input fields with current state values.
+     */
+    function renderShotInputs() {
+        // These inputs are now directly in the HTML, so we just set their values
+        document.getElementById('whiskeyShotParticipants').value = state.shots.whiskey.participants;
+        document.getElementById('whiskeyShotRounds').value = state.shots.whiskey.rounds;
+        document.getElementById('tequilaShotParticipants').value = state.shots.tequila.participants;
+        document.getElementById('tequilaShotRounds').value = state.shots.tequila.rounds;
     }
 
     /**
@@ -596,6 +649,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <h4 class="text-lg font-semibold text-slate-800 mt-4">Reference Prices (PLN):</h4>
             <ul class="list-disc list-inside ml-4 space-y-1">
                 ${Object.entries(initialData.prices).map(([item, price]) => `<li>${item}: ${price.toFixed(2)}</li>`).join('')}
+            </ul>
+
+            <h4 class="text-lg font-semibold text-slate-800 mt-4">Shots Assumptions:</h4>
+            <ul class="list-disc list-inside ml-4 space-y-1">
+                <li>Standard Shot Size: 50ml</li>
+                <li>Salt per Tequila Shot: 1 gram</li>
+                <li>Lime per Tequila Shot: 0.25 units (equivalent to a quarter of a lime)</li>
             </ul>
         `;
     }
@@ -686,12 +746,19 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPhasePreferences(); // Re-render to show updated percentages
         }
 
+        // Handle Shot Inputs
+        if (e.target.id === 'whiskeyShotParticipants') state.shots.whiskey.participants = parseInt(e.target.value) || 0;
+        if (e.target.id === 'whiskeyShotRounds') state.shots.whiskey.rounds = parseInt(e.target.value) || 0;
+        if (e.target.id === 'tequilaShotParticipants') state.shots.tequila.participants = parseInt(e.target.value) || 0;
+        if (e.target.id === 'tequilaShotRounds') state.shots.tequila.rounds = parseInt(e.target.value) || 0;
+
+
         updateAllCalculations(); // Recalculate everything on any input change
     });
     
     // Event listener for adding a new event phase
     document.getElementById('add-phase-btn').addEventListener('click', () => {
-        const newPhase = { id: nextPhaseId, name: `New Phase ${nextPhaseId-3}`, start: "20:00", end: "23:00" };
+        const newPhase = { id: nextPhaseId, name: `New Phase ${nextPhaseId-3}`, start: "20:00", end: "23:00" }; // Removed consumptionMultiplier
         state.eventPhases.push(newPhase);
         // Initialize default preferences for the new phase
         state.preferences[nextPhaseId] = {
@@ -718,6 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Tab switching logic for Dashboard, Cocktail Calculator, and FAQ sections
+    // Removed shots-calculator-tab-btn logic as it's no longer a separate tab
     document.getElementById('dashboard-tab-btn').addEventListener('click', () => {
         document.getElementById('dashboard-section').classList.remove('hidden');
         document.getElementById('cocktail-calculator-section').classList.add('hidden');
@@ -797,6 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 explanationList[item] = [];
             }
             shoppingList[item].amount += amount;
+            shoppingList[item].unit = unit; // Ensure unit is correctly set/updated
             explanationList[item].push(formula);
         }
 
@@ -812,7 +881,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         state.hydrationPreferences.forEach(pref => {
             const amount = totalHydration * (pref.percent / 100);
-            // Corrected: Use pref.name directly for hydration items
             addToShoppingList(pref.name, amount, 'L', `Hydration (${pref.name}): ${totalGuests} guests * ${hydrationPerGuest.toFixed(2)}L/guest * ${pref.percent}% = ${amount.toFixed(2)} L`);
         });
 
@@ -822,6 +890,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.eventPhases.forEach(phase => {
             const duration = getDuration(phase.start, phase.end);
             const drinksPerPersonPerHour = state.assumptions.drinksPerHour;
+            // Removed consumptionMultiplier as it's no longer in the state
             
             const phasePrefs = state.preferences[phase.id];
             if (!phasePrefs) return; // Skip if no preferences for this phase (e.g., newly added phase without default prefs)
@@ -829,7 +898,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Women (Alcoholic Drinkers) beverage calculations
             Object.entries(phasePrefs.women).forEach(([bev, pct]) => {
                 if (pct > 0) {
-                    const totalServings = womenDrinkers * drinksPerPersonPerHour * duration * (pct / 100);
+                    const totalServings = womenDrinkers * drinksPerPersonPerHour * duration * (pct / 100); // Removed multiplier
                     const formula = `${phase.name} (Women - ${bev}): ${womenDrinkers} guests * ${drinksPerPersonPerHour.toFixed(2)} drinks/h * ${duration.toFixed(1)}h * ${pct}% = ${totalServings.toFixed(2)} servings`;
                     if (state.recipes[bev]) { // If it's a cocktail, add to cocktail servings
                         if (!cocktailServings[bev]) cocktailServings[bev] = 0;
@@ -844,7 +913,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Men (Alcoholic Drinkers) beverage calculations
             Object.entries(phasePrefs.men).forEach(([bev, pct]) => {
                  if (pct > 0) {
-                    const totalServings = menDrinkers * drinksPerPersonPerHour * duration * (pct / 100);
+                    const totalServings = menDrinkers * drinksPerPersonPerHour * duration * (pct / 100); // Removed multiplier
                     const formula = `${phase.name} (Men - ${bev}): ${menDrinkers} guests * ${drinksPerPersonPerHour.toFixed(2)} drinks/h * ${duration.toFixed(1)}h * ${pct}% = ${totalServings.toFixed(2)} servings`;
                     if (state.recipes[bev]) {
                         if (!cocktailServings[bev]) cocktailServings[bev] = 0;
@@ -859,7 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Non-Drinkers beverage calculations (Non-alcoholic beer, Non-alcoholic Prosecco)
             Object.entries(phasePrefs.nonDrinkers).forEach(([bev, pct]) => {
                 if (pct > 0) {
-                    const totalServings = totalNonDrinkers * drinksPerPersonPerHour * duration * (pct / 100);
+                    const totalServings = totalNonDrinkers * drinksPerPersonPerHour * duration * (pct / 100); // Removed multiplier
                     const formula = `${phase.name} (Non-Drinkers - ${bev}): ${totalNonDrinkers} guests * ${drinksPerPersonPerHour.toFixed(2)} drinks/h * ${duration.toFixed(1)}h * ${pct}% = ${totalServings.toFixed(2)} servings`;
                     const servingSize = (state.servingsPerBottle[bev]?.size || 500) / 1000; // in Liters, default 500ml for beer/prosecco
                     addToShoppingList(bev, totalServings * servingSize, 'L', formula);
@@ -895,8 +964,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 addToShoppingList(ingredient.item, amount, unit, formula);
             });
         });
+
+        // 5. Calculate quantities for Shots
+        const shotSizeMl = 50; // Standard shot size in ml
+
+        // Whiskey Shots
+        const totalWhiskeyShots = state.shots.whiskey.participants * state.shots.whiskey.rounds;
+        if (totalWhiskeyShots > 0) {
+            const whiskeyAmountL = (totalWhiskeyShots * shotSizeMl) / 1000;
+            addToShoppingList("Whiskey", whiskeyAmountL, 'L', `Whiskey Shots: ${state.shots.whiskey.participants} participants * ${state.shots.whiskey.rounds} rounds * ${shotSizeMl}ml/shot = ${whiskeyAmountL.toFixed(2)} L`);
+        }
+
+        // Tequila Shots
+        const totalTequilaShots = state.shots.tequila.participants * state.shots.tequila.rounds;
+        if (totalTequilaShots > 0) {
+            const tequilaAmountL = (totalTequilaShots * shotSizeMl) / 1000;
+            addToShoppingList("Tequila", tequilaAmountL, 'L', `Tequila Shots: ${state.shots.tequila.participants} participants * ${state.shots.tequila.rounds} rounds * ${shotSizeMl}ml/shot = ${tequilaAmountL.toFixed(2)} L`);
+
+            const saltPerShotG = 1; // 1 gram of salt per shot
+            const totalSaltG = totalTequilaShots * saltPerShotG;
+            addToShoppingList("Salt", totalSaltG / 1000, 'kg', `Salt for Tequila Shots: ${totalTequilaShots} shots * ${saltPerShotG}g/shot = ${(totalSaltG / 1000).toFixed(2)} kg`);
+
+            const limePerShotUnit = 0.25; // 0.25 of a lime per shot (a quarter)
+            const totalLimeUnits = totalTequilaShots * limePerShotUnit;
+            addToShoppingList("Limes", totalLimeUnits, 'unit(s)', `Limes for Tequila Shots: ${totalTequilaShots} shots * ${limePerShotUnit} unit/shot = ${totalLimeUnits.toFixed(1)} unit(s)`);
+        }
         
-        // 5. Calculate total ice requirements
+        // 6. Calculate total ice requirements
         const baseIce = (totalGuests * state.assumptions.icePerGuest / 1000) * (totalEventDuration/24); // Ice for guests based on duration
         const cocktailIceAllowance = 0.2; // 200g (0.2kg) per cocktail serving
         const totalCocktailServings = Object.values(cocktailServings).reduce((sum, servings) => sum + servings, 0);
@@ -956,9 +1050,9 @@ document.addEventListener('DOMContentLoaded', () => {
         shoppingListContainer.innerHTML = '';
 
         // Define categories for chart aggregation (still needed for shopping list calculations)
-        const alcoholTypes = ["Prosecco", "White Wine", "Whiskey", "Beer", "Aperol", "White Rum", "Elderflower Liqueur"];
+        const alcoholTypes = ["Prosecco", "White Wine", "Whiskey", "Tequila", "Beer", "Aperol", "White Rum", "Elderflower Liqueur"]; // Added Tequila
         const hydrationTypes = ["Water", "Coca Cola", "Ginger Ale", "Soda", "Tonic Water", "Non-alcoholic beer", "Non-alcoholic Prosecco"];
-        const cocktailIngredients = ["Limes", "Oranges", "Mint", "Sugar"];
+        const cocktailIngredients = ["Limes", "Oranges", "Mint", "Sugar", "Salt"]; // Added Salt
 
         // Populate shopping list table and aggregate data for charts
         Object.entries(finalList).forEach(([item, data]) => {
@@ -969,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Determine purchase units, volume display, and cost based on item type and unit
             if (data.unit === 'L') {
-                const bottleSize = (state.servingsPerBottle[item]?.size || 1000); // Size in ml
+                const bottleSize = (state.servingsPerBottle[item]?.size || 750); // Default to 750ml for liquor
                 purchaseUnits = Math.ceil(data.amount / (bottleSize / 1000)); // Convert L to ml, then divide by bottle size in ml
                 volumeDisplay = `${bottleSize}ml`;
                 itemCost = purchaseUnits * price;
